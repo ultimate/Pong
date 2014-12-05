@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<!--
+	  	General project information
+	-->
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ultimate.pong</groupId>
+    <artifactId>PongServer</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0.0</version>
+	<name>PongServer</name>
+
+	<!--
+	  	Since this is a module within the parent pom, we need to reference the parent here.
+	-->
+    <parent>
+        <groupId>ultimate</groupId>
+        <artifactId>pong</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <build>
+        <defaultGoal>install</defaultGoal>
+    </build>
+
+	<!--
+		We will only need to declare additional dependencies here.
+		Note: for internal dependencies to other modules it is better to directly use the version
+		number in the version-tag instead of using a property. This way the version can easily be
+		updated by the maven-versions-plugin. By calling mvn versions:set -DnewVersion=x.x.x in the
+		specific module folder. Maven will then cycle through the parent and all of its module and
+		update the respective old version to the new version. (Which won't work with properties)
+	-->
+    <dependencies>
+		<!--
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.servlet</artifactId>
+            <version>${servlet.version}</version>
+            <scope>provided</scope>
+        </dependency>
+		-->
+    </dependencies>
+
+    <profiles>
+    </profiles>
+
+	<!--
+		Properties (e.g. version numbers) are defined here for easier configuration.
+	-->
+    <properties>
+		<!--
+		<servlet.version>3.1.1</servlet.version>
+		-->
+    </properties>
+</project>
