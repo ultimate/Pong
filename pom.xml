@@ -18,6 +18,7 @@
 		small and clear as possible.
 	-->
     <modules>
+        <module>PongTypes</module>
         <module>PongServer</module>
     </modules>
 

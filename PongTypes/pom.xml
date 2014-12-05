@@ -7,10 +7,10 @@
 	-->
     <modelVersion>4.0.0</modelVersion>
     <groupId>ultimate.pong</groupId>
-    <artifactId>PongServer</artifactId>
+    <artifactId>PongTypes</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0</version>
-	<name>PongServer</name>
+	<name>PongTypes</name>
 
 	<!--
 	  	Since this is a module within the parent pom, we need to reference the parent here.
@@ -34,11 +34,6 @@
 		update the respective old version to the new version. (Which won't work with properties)
 	-->
     <dependencies>
-        <dependency>
-            <groupId>ultimate.pong</groupId>
-            <artifactId>PongTypes</artifactId>
-            <version>1.0.0</version>
-        </dependency>
 		<!--
         <dependency>
             <groupId>org.glassfish</groupId>
