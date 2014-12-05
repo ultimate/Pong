@@ -1,6 +1,6 @@
 package ultimate.pong.enums;
 
-public enum EnumType
+public enum EnumObjectType
 {
 	slider,
 	ball,

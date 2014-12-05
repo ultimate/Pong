@@ -1,0 +1,123 @@
+<html>
+<head>
+	<script type="text/javascript" src="scripts/util/Requests.js"></script>
+	<script type="text/javascript">
+	
+		var url = location.href + "pong";
+	
+		create = function()
+		{			
+			var name = document.getElementById("name").value;
+			var port = Number(document.getElementById("port").value);
+			
+			var params = "name=" + name + "&port=" + port;
+			
+			AJAX.sendRequestUrlEncoded(url, params, "post", handleResult, handleResult);
+			
+			document.getElementById("port").value = (port+1);
+		};
+		
+		refresh = function()
+		{
+			AJAX.sendRequestUrlEncoded(url, "", "get", handleResult, handleResult);
+		};
+		
+		handleResult = function(request)
+		{
+			//console.log(request.response);
+
+			var matches = JSON.parse(request.response);
+			showMatches(matches);
+		};
+		
+		showMatches = function(matches)
+		{
+			var tableBody = document.getElementById("matches").children[1];
+			var match, player;
+			var children = document.createDocumentFragment();
+			var tr, td;
+			var ul, li;
+			for(var i in matches)
+			{
+				match = matches[i];
+				
+				tr = document.createElement("tr");
+				
+				td = document.createElement("td");
+				td.innerHTML = match.id;
+				tr.appendChild(td);
+				
+				td = document.createElement("td");
+				td.innerHTML = match.name;
+				tr.appendChild(td);
+				
+				td = document.createElement("td");
+				td.innerHTML = match.state;
+				tr.appendChild(td);
+				
+				td = document.createElement("td");
+				ul = document.createElement("ul");
+				for(var p in match.players)
+				{
+					player = match.players[p];
+					
+					li = document.createElement("li");
+					li.style.color = "rgb(" + player.color.r + "," + player.color.g + "," + player.color.b + ")";
+					li.innerHTML = player.name + " (" + player.score + ")";
+					ul.appendChild(li);
+				}
+				td.appendChild(ul);
+			 	tr.appendChild(td);
+				
+				td = document.createElement("td");
+				td.innerHTML = match.port;
+				tr.appendChild(td);
+				
+				children.appendChild(tr);
+			}
+			
+			// clear all children
+			while(tableBody.firstChild)
+				tableBody.removeChild(tableBody.firstChild);
+			// add new children
+			tableBody.appendChild(children);
+		};
+	</script>
+	<style type="text/css">
+		/*
+		body {
+			display: flex;
+			flex-direction: vertical;
+		}
+		body > * {
+			flex-grow: 0;
+		}
+		body > bar {
+			flex-grow: 1;
+		}
+		*/
+	</style>
+</head>
+<body>
+	<div class="bar">
+		Name: <input type="text" id="name"/><br/>
+		Port: <input type="number" id="port" min="1" max="65535"/><br/>
+		<input type="button" onclick="create();" value="create new game"/>
+		<input type="button" onclick="refresh();" value="refresh list"/>
+	</div>
+	<div>
+	<table id="matches" border="1">
+		<thead>
+			<td>ID</td>
+			<td>Name</td>
+			<td>State</td>
+			<td>Players</td>
+			<td>Port</td>
+		</thead>
+		<tbody>
+			<!--  to be inserted by script -->
+		</tbody>
+	</table>
+	</div>	
+</body>
+</html>

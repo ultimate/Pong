@@ -1,21 +1,30 @@
 package ultimate.pong.data.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ultimate.pong.data.model.objects.Slider;
 
 public class Player
 {
-	protected Integer	id;
-	protected String	name;
-	protected Color		color;
-	protected int		score;
-	protected boolean	ready;
-	protected boolean	ball;
-	protected boolean	last;
-	protected Slider	slider;
+	protected Integer		id;
+	protected String		name;
+	protected Color			color;
+	protected int			score;
+	protected boolean		ready;
+	protected boolean		ball;
+	protected boolean		last;
+	protected Slider		slider;
+	protected double		sliderPosition;
+
+	protected List<Command>	commands;
 
 	public Player()
 	{
 		super();
+		this.color = new Color();
+		this.slider = new Slider();
+		this.commands = new ArrayList<Command>();
 	}
 
 	public Integer getId()
@@ -98,6 +107,26 @@ public class Player
 		this.slider = slider;
 	}
 
+	public double getSliderPosition()
+	{
+		return sliderPosition;
+	}
+
+	public void setSliderPosition(double sliderPosition)
+	{
+		this.sliderPosition = sliderPosition;
+	}
+
+	public List<Command> getCommands()
+	{
+		return commands;
+	}
+
+	public void setCommands(List<Command> commands)
+	{
+		this.commands = commands;
+	}
+
 	@Override
 	public int hashCode()
 	{
@@ -105,12 +134,16 @@ public class Player
 		int result = 1;
 		result = prime * result + (ball ? 1231 : 1237);
 		result = prime * result + ((color == null) ? 0 : color.hashCode());
+		result = prime * result + ((commands == null) ? 0 : commands.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + (last ? 1231 : 1237);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + (ready ? 1231 : 1237);
 		result = prime * result + score;
 		result = prime * result + ((slider == null) ? 0 : slider.hashCode());
+		long temp;
+		temp = Double.doubleToLongBits(sliderPosition);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
 
@@ -132,6 +165,13 @@ public class Player
 				return false;
 		}
 		else if(!color.equals(other.color))
+			return false;
+		if(commands == null)
+		{
+			if(other.commands != null)
+				return false;
+		}
+		else if(!commands.equals(other.commands))
 			return false;
 		if(id == null)
 		{
@@ -160,6 +200,8 @@ public class Player
 		}
 		else if(!slider.equals(other.slider))
 			return false;
+		if(Double.doubleToLongBits(sliderPosition) != Double.doubleToLongBits(other.sliderPosition))
+			return false;
 		return true;
 	}
 
@@ -167,6 +209,6 @@ public class Player
 	public String toString()
 	{
 		return "Player [id=" + id + ", name=" + name + ", color=" + color + ", score=" + score + ", ready=" + ready + ", ball=" + ball + ", last="
-				+ last + ", slider=" + slider + "]";
+				+ last + ", slider=" + slider + ", sliderPosition=" + sliderPosition + ", commands=" + commands + "]";
 	}
 }

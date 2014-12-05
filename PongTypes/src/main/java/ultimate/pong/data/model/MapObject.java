@@ -1,12 +1,12 @@
 package ultimate.pong.data.model;
 
-import ultimate.pong.enums.EnumType;
+import ultimate.pong.enums.EnumObjectType;
 
 public class MapObject
 {
 	protected Integer	id;
 	protected String	name;
-	protected EnumType	type;
+	protected EnumObjectType	type;
 	protected Color		color;
 
 	public MapObject()
@@ -14,7 +14,7 @@ public class MapObject
 		this(null);
 	}
 
-	public MapObject(EnumType type)
+	public MapObject(EnumObjectType type)
 	{
 		super();
 		this.type = type;
@@ -50,7 +50,7 @@ public class MapObject
 		this.color = color;
 	}
 
-	public EnumType getType()
+	public EnumObjectType getType()
 	{
 		return type;
 	}

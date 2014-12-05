@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"> 
+
+	<description><![CDATA[pong-webserver]]></description>
+	<display-name>pong-webserver</display-name>
+	
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>
+            classpath*:/ctx.xml
+		</param-value>
+	</context-param>
+    
+    <!--
+    	Declaration of the "personFilter".
+    	We use a spring DelegatingFilterProxy here to delegate the filter logic to our filter bean.
+    	This way we can declare our filter in the application context and use the bean-syntax to link
+    	it to other beans.,
+    	
+     -->
+    <filter>
+    	<filter-name>pongFilter</filter-name>
+    	<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    	<init-param>
+    		<param-name>targetBeanName</param-name>
+    		<param-value>pongFilter</param-value>
+    	</init-param>
+    </filter>    
+    <!--
+    	Mapping of the "personFilter" to a specific URL
+    -->
+    <filter-mapping>
+      	<filter-name>pongFilter</filter-name>
+      	<url-pattern>/pong</url-pattern>
+    </filter-mapping>
+    
+    <!--
+    	Registration of the spring ContextLoaderListener responsible for creating the application context.  
+     -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>	
+	</welcome-file-list>
+	
+</web-app>

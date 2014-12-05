@@ -2,7 +2,7 @@ package ultimate.pong.data.model.objects;
 
 import ultimate.pong.data.model.MapObject;
 import ultimate.pong.data.model.Position;
-import ultimate.pong.enums.EnumType;
+import ultimate.pong.enums.EnumObjectType;
 
 public class Wall extends MapObject
 {
@@ -16,7 +16,7 @@ public class Wall extends MapObject
 
 	public Wall(Position start, Position end)
 	{
-		super(EnumType.slider);
+		super(EnumObjectType.slider);
 		this.setStart(start);
 		this.setEnd(end);
 	}

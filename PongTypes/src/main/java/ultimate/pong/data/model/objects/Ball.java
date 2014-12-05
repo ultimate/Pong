@@ -2,15 +2,16 @@ package ultimate.pong.data.model.objects;
 
 import ultimate.pong.data.model.MapObject;
 import ultimate.pong.data.model.Position;
-import ultimate.pong.enums.EnumType;
+import ultimate.pong.enums.EnumObjectType;
 
 public class Ball extends MapObject
 {
 	protected Position	position;
+	protected Position	direction;
 
 	public Ball()
 	{
-		super(EnumType.ball);
+		super(EnumObjectType.ball);
 	}
 
 	public Position getPosition()
@@ -23,11 +24,22 @@ public class Ball extends MapObject
 		this.position = position;
 	}
 
+	public Position getDirection()
+	{
+		return direction;
+	}
+
+	public void setDirection(Position direction)
+	{
+		this.direction = direction;
+	}
+
 	@Override
 	public int hashCode()
 	{
 		final int prime = 31;
 		int result = super.hashCode();
+		result = prime * result + ((direction == null) ? 0 : direction.hashCode());
 		result = prime * result + ((position == null) ? 0 : position.hashCode());
 		return result;
 	}
@@ -42,6 +54,13 @@ public class Ball extends MapObject
 		if(getClass() != obj.getClass())
 			return false;
 		Ball other = (Ball) obj;
+		if(direction == null)
+		{
+			if(other.direction != null)
+				return false;
+		}
+		else if(!direction.equals(other.direction))
+			return false;
 		if(position == null)
 		{
 			if(other.position != null)
@@ -55,6 +74,6 @@ public class Ball extends MapObject
 	@Override
 	public String toString()
 	{
-		return "Ball [position=" + position + "]";
+		return "Ball [position=" + position + ", direction=" + direction + "]";
 	}
 }
