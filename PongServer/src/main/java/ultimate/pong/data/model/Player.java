@@ -1,0 +1,172 @@
+package ultimate.pong.data.model;
+
+import ultimate.pong.data.model.objects.Slider;
+
+public class Player
+{
+	protected Integer	id;
+	protected String	name;
+	protected Color		color;
+	protected int		score;
+	protected boolean	ready;
+	protected boolean	ball;
+	protected boolean	last;
+	protected Slider	slider;
+
+	public Player()
+	{
+		super();
+	}
+
+	public Integer getId()
+	{
+		return id;
+	}
+
+	public void setId(Integer id)
+	{
+		this.id = id;
+	}
+
+	public String getName()
+	{
+		return name;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
+	public Color getColor()
+	{
+		return color;
+	}
+
+	public void setColor(Color color)
+	{
+		this.color = color;
+	}
+
+	public int getScore()
+	{
+		return score;
+	}
+
+	public void setScore(int score)
+	{
+		this.score = score;
+	}
+
+	public boolean isReady()
+	{
+		return ready;
+	}
+
+	public void setReady(boolean ready)
+	{
+		this.ready = ready;
+	}
+
+	public boolean isBall()
+	{
+		return ball;
+	}
+
+	public void setBall(boolean ball)
+	{
+		this.ball = ball;
+	}
+
+	public boolean isLast()
+	{
+		return last;
+	}
+
+	public void setLast(boolean last)
+	{
+		this.last = last;
+	}
+
+	public Slider getSlider()
+	{
+		return slider;
+	}
+
+	public void setSlider(Slider slider)
+	{
+		this.slider = slider;
+	}
+
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (ball ? 1231 : 1237);
+		result = prime * result + ((color == null) ? 0 : color.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + (last ? 1231 : 1237);
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (ready ? 1231 : 1237);
+		result = prime * result + score;
+		result = prime * result + ((slider == null) ? 0 : slider.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if(this == obj)
+			return true;
+		if(obj == null)
+			return false;
+		if(getClass() != obj.getClass())
+			return false;
+		Player other = (Player) obj;
+		if(ball != other.ball)
+			return false;
+		if(color == null)
+		{
+			if(other.color != null)
+				return false;
+		}
+		else if(!color.equals(other.color))
+			return false;
+		if(id == null)
+		{
+			if(other.id != null)
+				return false;
+		}
+		else if(!id.equals(other.id))
+			return false;
+		if(last != other.last)
+			return false;
+		if(name == null)
+		{
+			if(other.name != null)
+				return false;
+		}
+		else if(!name.equals(other.name))
+			return false;
+		if(ready != other.ready)
+			return false;
+		if(score != other.score)
+			return false;
+		if(slider == null)
+		{
+			if(other.slider != null)
+				return false;
+		}
+		else if(!slider.equals(other.slider))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString()
+	{
+		return "Player [id=" + id + ", name=" + name + ", color=" + color + ", score=" + score + ", ready=" + ready + ", ball=" + ball + ", last="
+				+ last + ", slider=" + slider + "]";
+	}
+}
