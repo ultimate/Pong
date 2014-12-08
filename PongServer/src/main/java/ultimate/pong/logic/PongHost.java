@@ -3,6 +3,7 @@ package ultimate.pong.logic;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,12 +15,13 @@ import ultimate.pong.enums.EnumMatchState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 public abstract class PongHost
 {
-	protected transient final Logger	logger	= LoggerFactory.getLogger(getClass());
+	protected transient final Logger	logger			= LoggerFactory.getLogger(getClass());
 
-	public static final String			DELIM	= "\n\n";
+	public static final String			DELIM			= "\n\n";
 
 	protected MatchManager				matchManager;
 
@@ -27,7 +29,9 @@ public abstract class PongHost
 
 	protected List<Client>				clients;
 
-	protected ObjectMapper				mapper	= new ObjectMapper();
+	protected ObjectMapper				mapper			= new ObjectMapper();
+	protected ObjectWriter				writer			= mapper.writer();
+	protected ObjectReader				mapReader		= mapper.reader();
 	protected ObjectReader				playerReader	= mapper.reader().withType(Player.class);
 	protected ObjectReader				commandReader	= mapper.reader().withType(Command.class);
 
@@ -43,6 +47,29 @@ public abstract class PongHost
 	public List<Client> getClients()
 	{
 		return clients;
+	}
+	
+	public void broadcast(Match match)
+	{		
+		try
+		{
+			String message = writer.writeValueAsString(match);
+			for(Client c: this.getClients())
+			{
+				try
+				{
+					c.sendMessage(message);
+				}
+				catch(IOException e)
+				{
+					logger.error("error sending match to client", e);
+				}
+			}
+		}
+		catch(IOException e)
+		{
+			logger.error("error serializing match", e);
+		}		
 	}
 
 	public abstract void startAccepting();
@@ -65,10 +92,16 @@ public abstract class PongHost
 			logger.debug("match state: " + match.getState() + " -> incoming message:\n" + message);
 			if(match.getState() == EnumMatchState.waiting)
 			{
+				// copy update values only if present
+				// therefore use a map to check wether given keys are present.
+				Map<String, Object> playerUpdateMap = mapReader.readValue(message);
 				Player playerUpdate = playerReader.readValue(message);
-				this.player.setName(playerUpdate.getName());
-				this.player.setColor(playerUpdate.getColor());
-				this.player.setReady(playerUpdate.isReady());
+				if(playerUpdateMap.containsKey("name"))
+					this.player.setName(playerUpdate.getName());
+				if(playerUpdateMap.containsKey("color"))
+					this.player.setColor(playerUpdate.getColor());
+				if(playerUpdateMap.containsKey("ready"))
+					this.player.setReady(playerUpdate.isReady());
 			}
 			else if(match.getState() == EnumMatchState.running)
 			{

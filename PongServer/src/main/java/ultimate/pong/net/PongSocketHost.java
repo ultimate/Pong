@@ -74,6 +74,7 @@ public class PongSocketHost extends PongHost implements Runnable
 			{
 				clientSocket = this.server.accept();
 				player = this.matchManager.addPlayer(match, "unnamed");
+				player.setConnected(true);
 				client = new Client(clientSocket, player);
 				client.start();
 			}
