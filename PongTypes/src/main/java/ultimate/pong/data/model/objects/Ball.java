@@ -1,37 +1,49 @@
 package ultimate.pong.data.model.objects;
 
 import ultimate.pong.data.model.MapObject;
-import ultimate.pong.data.model.Position;
+import ultimate.pong.data.model.Player;
 import ultimate.pong.enums.EnumObjectType;
+import ultimate.pong.math.Vector;
 
 public class Ball extends MapObject
 {
-	protected Position	position;
-	protected Position	direction;
+	protected Vector		position;
+	protected Vector		direction;
+	protected Player	lastContact;
 
 	public Ball()
 	{
 		super(EnumObjectType.ball);
 	}
 
-	public Position getPosition()
+	public Vector getPosition()
 	{
 		return position;
 	}
 
-	public void setPosition(Position position)
+	public void setPosition(Vector position)
 	{
 		this.position = position;
 	}
 
-	public Position getDirection()
+	public Vector getDirection()
 	{
 		return direction;
 	}
 
-	public void setDirection(Position direction)
+	public void setDirection(Vector direction)
 	{
 		this.direction = direction;
+	}
+
+	public Player getLastContact()
+	{
+		return lastContact;
+	}
+
+	public void setLastContact(Player lastContact)
+	{
+		this.lastContact = lastContact;
 	}
 
 	@Override

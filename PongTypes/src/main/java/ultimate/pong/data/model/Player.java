@@ -12,9 +12,11 @@ public class Player
 	protected Color			color;
 	protected int			score;
 	protected boolean		ready;
+	protected boolean		connected;
 	protected boolean		ball;
-	protected boolean		last;
+	// protected boolean last;
 	protected Slider		slider;
+	protected double		sliderSize;
 	protected double		sliderPosition;
 
 	protected List<Command>	commands;
@@ -77,6 +79,16 @@ public class Player
 		this.ready = ready;
 	}
 
+	public boolean isConnected()
+	{
+		return connected;
+	}
+
+	public void setConnected(boolean connected)
+	{
+		this.connected = connected;
+	}
+
 	public boolean isBall()
 	{
 		return ball;
@@ -87,15 +99,15 @@ public class Player
 		this.ball = ball;
 	}
 
-	public boolean isLast()
-	{
-		return last;
-	}
-
-	public void setLast(boolean last)
-	{
-		this.last = last;
-	}
+	// public boolean isLast()
+	// {
+	// return last;
+	// }
+	//
+	// public void setLast(boolean last)
+	// {
+	// this.last = last;
+	// }
 
 	public Slider getSlider()
 	{
@@ -105,6 +117,16 @@ public class Player
 	public void setSlider(Slider slider)
 	{
 		this.slider = slider;
+	}
+
+	public double getSliderSize()
+	{
+		return sliderSize;
+	}
+
+	public void setSliderSize(double sliderSize)
+	{
+		this.sliderSize = sliderSize;
 	}
 
 	public double getSliderPosition()
@@ -135,14 +157,17 @@ public class Player
 		result = prime * result + (ball ? 1231 : 1237);
 		result = prime * result + ((color == null) ? 0 : color.hashCode());
 		result = prime * result + ((commands == null) ? 0 : commands.hashCode());
+		result = prime * result + (connected ? 1231 : 1237);
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + (last ? 1231 : 1237);
+		// result = prime * result + (last ? 1231 : 1237);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + (ready ? 1231 : 1237);
 		result = prime * result + score;
 		result = prime * result + ((slider == null) ? 0 : slider.hashCode());
 		long temp;
 		temp = Double.doubleToLongBits(sliderPosition);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(sliderSize);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
@@ -173,6 +198,8 @@ public class Player
 		}
 		else if(!commands.equals(other.commands))
 			return false;
+		if(connected != other.connected)
+			return false;
 		if(id == null)
 		{
 			if(other.id != null)
@@ -180,8 +207,8 @@ public class Player
 		}
 		else if(!id.equals(other.id))
 			return false;
-		if(last != other.last)
-			return false;
+		// if(last != other.last)
+		// return false;
 		if(name == null)
 		{
 			if(other.name != null)
@@ -202,13 +229,26 @@ public class Player
 			return false;
 		if(Double.doubleToLongBits(sliderPosition) != Double.doubleToLongBits(other.sliderPosition))
 			return false;
+		if(Double.doubleToLongBits(sliderSize) != Double.doubleToLongBits(other.sliderSize))
+			return false;
 		return true;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "Player [id=" + id + ", name=" + name + ", color=" + color + ", score=" + score + ", ready=" + ready + ", ball=" + ball + ", last="
-				+ last + ", slider=" + slider + ", sliderPosition=" + sliderPosition + ", commands=" + commands + "]";
+		return "Player [id=" + id + ", name=" + name + ", color=" + color + ", score=" + score + ", ready=" + ready + ", connected=" + connected
+				+ ", ball=" + ball + ", slider=" + slider + ", sliderSize=" + sliderSize + ", sliderPosition=" + sliderPosition + ", commands="
+				+ commands + "]";
+	}
+
+	public synchronized void increaseScore(int amount)
+	{
+		this.score += amount;
+	}
+
+	public synchronized void decreaseScore(int amount)
+	{
+		this.score -= amount;
 	}
 }

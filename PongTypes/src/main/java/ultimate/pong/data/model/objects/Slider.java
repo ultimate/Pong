@@ -1,42 +1,46 @@
 package ultimate.pong.data.model.objects;
 
-import ultimate.pong.data.model.MapObject;
-import ultimate.pong.data.model.Position;
-import ultimate.pong.enums.EnumObjectType;
+import java.util.Arrays;
+import java.util.List;
 
-public class Slider extends MapObject
+import ultimate.pong.data.model.MapObject;
+import ultimate.pong.enums.EnumObjectType;
+import ultimate.pong.math.Polygon;
+import ultimate.pong.math.Vector;
+
+public class Slider extends MapObject implements Polygon
 {
-	protected Position	start;
-	protected Position	end;
+	protected Vector	start;
+	protected Vector	end;
 
 	public Slider()
 	{
-		this(new Position(), new Position());
+		this(new Vector(), new Vector());
 	}
 
-	public Slider(Position start, Position end)
+	public Slider(Vector start, Vector end)
 	{
 		super(EnumObjectType.slider);
 		this.setStart(start);
 		this.setEnd(end);
 	}
 
-	public Position getStart()
+	public Vector getStart()
 	{
 		return start;
 	}
 
-	public void setStart(Position start)
+	public void setStart(Vector start)
 	{
 		this.start = start;
 	}
 
-	public Position getEnd()
+	public Vector getEnd()
 	{
 		return end;
 	}
 
-	public void setEnd(Position end)
+	public void setEnd(Vector end)
 	{
 		this.end = end;
 	}
@@ -82,5 +86,11 @@ public class Slider extends MapObject
 	public String toString()
 	{
 		return "Slider [start=" + start + ", end=" + end + "]";
+	}
+
+	@Override
+	public List<Vector> getPoints()
+	{
+		return Arrays.asList(new Vector[] {start, end});
 	}
 }
