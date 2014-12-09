@@ -7,13 +7,20 @@ import ultimate.pong.math.Vector;
 
 public class Ball extends MapObject
 {
-	protected Vector		position;
-	protected Vector		direction;
+	protected Vector	position;
+	protected Vector	direction;
 	protected Player	lastContact;
 
 	public Ball()
 	{
 		super(EnumObjectType.ball);
+	}
+
+	public Ball(Vector position, Vector direction)
+	{
+		this();
+		this.position = position;
+		this.direction = direction;
 	}
 
 	public Vector getPosition()

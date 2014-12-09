@@ -2,10 +2,10 @@ package ultimate.pong.math;
 
 public class Vector implements Comparable<Vector>
 {
-	public static final double TOLERANCE = 0.0001;
-	
-	protected double	x;
-	protected double	y;
+	public static final double	TOLERANCE	= 0.0001;
+
+	protected double			x;
+	protected double			y;
 
 	public Vector()
 	{
@@ -17,6 +17,11 @@ public class Vector implements Comparable<Vector>
 		super();
 		this.setX(x);
 		this.setY(y);
+	}
+
+	public Vector(Vector v)
+	{
+		this(v.x, v.y);
 	}
 
 	public double getX()
@@ -63,7 +68,7 @@ public class Vector implements Comparable<Vector>
 		if(getClass() != obj.getClass())
 			return false;
 		Vector other = (Vector) obj;
-		
+
 		return compareTo(other) == 0;
 	}
 
@@ -72,21 +77,21 @@ public class Vector implements Comparable<Vector>
 	{
 		return "Vector [x=" + x + ", y=" + y + "]";
 	}
-	
+
 	public Vector round()
 	{
 		x = Math.round(x / TOLERANCE) * TOLERANCE;
 		y = Math.round(y / TOLERANCE) * TOLERANCE;
 		return this;
 	}
-	
+
 	public Vector scale(double factor)
 	{
 		x *= factor;
 		y *= factor;
 		return this;
 	}
-	
+
 	public Vector add(Vector other)
 	{
 		x += other.x;
@@ -94,12 +99,34 @@ public class Vector implements Comparable<Vector>
 		return this;
 	}
 
+	public Vector sub(Vector other)
+	{
+		x -= other.x;
+		y -= other.y;
+		return this;
+	}
+
+	public double length()
+	{
+		return Math.sqrt(x * x + y * y);
+	}
+
+	public Vector norm()
+	{
+		return scale(1 / length());
+	}
+
+	public double dot(Vector other)
+	{
+		return this.x * other.x + this.y * other.y;
+	}
+
 	@Override
 	public int compareTo(Vector other)
-	{		
+	{
 		Vector thisRounded = new Vector(x, y).round();
 		Vector otherRounded = new Vector(other.x, other.y).round();
-		
+
 		if(Math.abs(thisRounded.x - otherRounded.x) > TOLERANCE)
 			return (int) Math.signum(thisRounded.x - otherRounded.x);
 		if(Math.abs(thisRounded.y - otherRounded.y) > TOLERANCE)

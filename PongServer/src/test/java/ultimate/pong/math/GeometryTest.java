@@ -1,7 +1,7 @@
 package ultimate.pong.math;
 
 import java.util.Arrays;
-import java.util.Set;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -202,6 +202,17 @@ public class GeometryTest extends TestCase
 		}
 	}
 
+	public void testNormal() throws Exception
+	{
+		Vector v;
+		for(int i = 0; i < 100; i++)
+		{
+			v = new Vector(Math.random() * 2 - 1, Math.random() * 2 - 1);
+
+			assertEquals(0.0, Geometry.normal(v).dot(v));
+		}
+	}
+
 	public void testIntersect_Lines() throws Exception
 	{
 		assertEquals(new Vector(0.0, 0.0),
@@ -228,31 +239,62 @@ public class GeometryTest extends TestCase
 				Geometry.intersect(new Vector(-1.0, -1.0), new Vector(1.0, 1.0), new Vector(1.0, 0.0), new Vector(0.0, 1.0)));
 		assertEquals(new Vector(0.0, 0.0),
 				Geometry.intersect(new Vector(-1.0, -1.0), new Vector(1.0, 1.0), new Vector(-0.5, 1.0), new Vector(0.5, -1.0)));
+		
+		assertEquals(new Vector(0.1, 1.0), Geometry.intersect(new Vector(-1.0, 1.0), new Vector(1.0, 1.0), new Vector(0.1, 0.0), new Vector(0.1, 2.0)));
 	}
 
 	public void testIntersect_Polygons() throws Exception
 	{
 		Polygon p1, p2;
-		Set<Vector> intersections;
-		
+		List<Vector> intersections;
+
 		/*
-		 *   ooooooo
-		 *   o     o
+		 * ooooooo
+		 * o o
 		 * ooxoooo o
-		 * o o   o o 
+		 * o o o o
 		 * o o 0 o o
-		 * o o   o o
+		 * o o o o
 		 * o ooooxoo
-		 * o     o
+		 * o o
 		 * ooooooo
 		 */
 
 		p1 = new Polygon.Impl(Arrays.asList(new Vector(2.0, 2.0), new Vector(2.0, -1.0), new Vector(-1.0, -1.0), new Vector(-1.0, 2.0)));
 		p2 = new Polygon.Impl(Arrays.asList(new Vector(-2.0, -2.0), new Vector(-2.0, 1.0), new Vector(1.0, 1.0), new Vector(1.0, -2.0)));
-		
+
 		intersections = Geometry.intersect(p1, p2);
 		assertEquals(2, intersections.size());
 		assertTrue(intersections.contains(new Vector(1.0, -1.0)));
 		assertTrue(intersections.contains(new Vector(-1.0, 1.0)));
+	}
+
+	public void testMirror() throws Exception
+	{
+		Vector line;
+		
+		line = new Vector(1.0, 0.0); // 0°
+		assertEquals(new Vector(0.0, -1.0), Geometry.mirror(new Vector(0.0, 1.0), line));
+		assertEquals(new Vector(0.0, 1.0), Geometry.mirror(new Vector(0.0, -1.0), line));
+		assertEquals(new Vector(1.0, 0.0), Geometry.mirror(new Vector(1.0, 0.0), line));
+		assertEquals(new Vector(-1.0, 0.0), Geometry.mirror(new Vector(-1.0, 0.0), line));
+		assertEquals(new Vector(1.0, -1.0), Geometry.mirror(new Vector(1.0, 1.0), line));
+		assertEquals(new Vector(1.0, 1.0), Geometry.mirror(new Vector(1.0, -1.0), line));
+
+		line = new Vector(1.0, 1.0); // 45°
+		assertEquals(new Vector(1.0, 0.0), Geometry.mirror(new Vector(0.0, 1.0), line));
+		assertEquals(new Vector(-1.0, 0.0), Geometry.mirror(new Vector(0.0, -1.0), line));
+		assertEquals(new Vector(0.0, 1.0), Geometry.mirror(new Vector(1.0, 0.0), line));
+		assertEquals(new Vector(0.0, -1.0), Geometry.mirror(new Vector(-1.0, 0.0), line));
+		assertEquals(new Vector(1.0, 1.0), Geometry.mirror(new Vector(1.0, 1.0), line));
+		assertEquals(new Vector(-1.0, 1.0), Geometry.mirror(new Vector(1.0, -1.0), line));
+
+		line = new Vector(1.0, -1.0); // -45°
+		assertEquals(new Vector(-1.0, 0.0), Geometry.mirror(new Vector(0.0, 1.0), line));
+		assertEquals(new Vector(1.0, 0.0), Geometry.mirror(new Vector(0.0, -1.0), line));
+		assertEquals(new Vector(0.0, -1.0), Geometry.mirror(new Vector(1.0, 0.0), line));
+		assertEquals(new Vector(0.0, 1.0), Geometry.mirror(new Vector(-1.0, 0.0), line));
+		assertEquals(new Vector(-1.0, -1.0), Geometry.mirror(new Vector(1.0, 1.0), line));
+		assertEquals(new Vector(1.0, -1.0), Geometry.mirror(new Vector(1.0, -1.0), line));
 	}
 }

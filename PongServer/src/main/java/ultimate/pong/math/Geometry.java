@@ -1,5 +1,6 @@
 package ultimate.pong.math;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -79,6 +80,11 @@ public abstract class Geometry
 		return Math.sqrt(v.x * v.x + v.y * v.y);
 	}
 	
+	public static Vector normal(Vector v)
+	{
+		return new Vector(-v.y, v.x);
+	}
+	
 	public static Vector intersect(Vector v11, Vector v12, Vector v21, Vector v22)
 	{
 		// line 1 --> (x(s),y(s)) = (x11 + s*(x12-x11),y11 + s*(y12-y11))
@@ -124,7 +130,7 @@ public abstract class Geometry
 		return new Vector(xs1, ys1);
 	}
 	
-	public static Set<Vector> intersect(Polygon p1, Polygon p2)
+	public static List<Vector> intersect(Polygon p1, Polygon p2)
 	{
 		// use set to prevent duplicates
 		Set<Vector> intersections = new TreeSet<Vector>();
@@ -145,12 +151,22 @@ public abstract class Geometry
 				p22 = points2.get((i2+1) % points2.size()); // closing edge from last to first point
 				
 				intersection = intersect(p11, p12, p21, p22);
-				System.out.println(intersection);
 				if(intersection != null)
 					intersections.add(intersection);
 			}
 		}
 		
-		return intersections;
+		return new ArrayList<Vector>(intersections);
+	}
+	
+	public static Vector mirror(Vector v, Vector line)
+	{
+		Vector lineN = new Vector(line).norm();
+		Vector normal = Geometry.normal(line).norm();
+		
+		Vector orthogonal = new Vector(normal).scale(normal.dot(v));
+		Vector tangential = new Vector(lineN).scale(lineN.dot(v));
+		
+		return orthogonal.scale(-1).add(tangential);
 	}
 }

@@ -86,8 +86,8 @@ public class MatchManagerImpl implements MatchManager
 				break;
 
 			case running:
-				int corners = match.getPlayers().size()*2; 
-				
+				int corners = match.getPlayers().size() * 2;
+
 				// check disconnected players
 				for(Player p : match.getPlayers())
 				{
@@ -105,7 +105,7 @@ public class MatchManagerImpl implements MatchManager
 				for(int i = 0; i < match.getPlayers().size(); i++)
 				{
 					p = match.getPlayers().get(i);
-					c = p.getCommands().get(p.getCommands().size()-1);
+					c = p.getCommands().get(p.getCommands().size() - 1);
 					// move slider
 					// release
 					if(c.isRelease() && p.isBall())
@@ -114,30 +114,27 @@ public class MatchManagerImpl implements MatchManager
 						ball.setId(++objectIdCounter);
 						ball.setName("ball");
 						ball.setPosition(Geometry.center(p.getSlider().getStart(), p.getSlider().getEnd()));
-						// get direction from players slider range center in order to start orthogonal
-						Vector playerCenter = Geometry.getCenterPoint(corners, i*2);
+						// get direction from players slider range center in order to start
+						// orthogonal
+						Vector playerCenter = Geometry.getCenterPoint(corners, i * 2);
 						double angle = Geometry.angle(playerCenter);
 						ball.setDirection(Geometry.direction(angle + Math.PI).scale(0.005));
 						// last contact is releasing player (use player color)
 						ball.setLastContact(p);
-					}		
+					}
 				}
 
 				// handle map objects
-				for(MapObject obj : match.getMap().getObjects())
+				List<MapObject> objects = match.getMap().getObjects();
+				// consider interaction between objects
+				Physics.interact(objects);
+
+				for(MapObject obj : objects)
 				{
 					if(obj instanceof Ball)
 					{
 						Ball ball = (Ball) obj;
-						
-						// update ball direction
-						for(MapObject other : match.getMap().getObjects())
-						{
-							ball.getDirection().add(Physics.getInfluence(other, ball));
-						}
-						// move ball
-						ball.getPosition().add(ball.getDirection());
-						
+
 						// update color (use color of player with last contact)
 						ball.setColor(ball.getLastContact().getColor());
 
@@ -237,16 +234,16 @@ public class MatchManagerImpl implements MatchManager
 		// assign ball
 		Player randomPlayer = match.getPlayers().get(random.nextInt(match.getPlayers().size()));
 		randomPlayer.setBall(true);
-		
+
 		// add sliders as Map Object
-		for(Player p: match.getPlayers())
+		for(Player p : match.getPlayers())
 		{
 			match.getMap().getObjects().add(p.getSlider());
 		}
 
 		Ticker ticker = new Ticker(match);
 		ticker.start();
-		
+
 		this.tickers.add(ticker);
 
 		return true;
@@ -345,7 +342,7 @@ public class MatchManagerImpl implements MatchManager
 					logger.error("could not sleep", e);
 				}
 			}
-			
+
 			tickers.remove(this);
 		}
 	}

@@ -59,6 +59,14 @@ public class VectorTest extends TestCase
 		assertEquals(new Vector(-2.0, -4.0), new Vector(-1.0, -2.0).add(new Vector(-1.0, -2.0)));
 	}
 
+	public void testSub() throws Exception
+	{
+		assertEquals(new Vector(2.0, 4.0), new Vector(1.0, 2.0).sub(new Vector(-1.0, -2.0)));
+		assertEquals(new Vector(0.0, 0.0), new Vector(1.0, 2.0).sub(new Vector(1.0, 2.0)));
+		assertEquals(new Vector(0.0, 0.0), new Vector(-1.0, -2.0).sub(new Vector(-1.0, -2.0)));
+		assertEquals(new Vector(-2.0, -4.0), new Vector(-1.0, -2.0).sub(new Vector(1.0, 2.0)));
+	}
+
 	public void testCompare() throws Exception
 	{
 		assertEquals(0, new Vector(0.5, 0.0).compareTo(new Vector(0.500001, 0.0)));
@@ -84,5 +92,37 @@ public class VectorTest extends TestCase
 		assertEquals(0, new Vector(0.0, 0.5001).compareTo(new Vector(0.0, 0.5)));
 		assertEquals(1, new Vector(0.0, 0.501).compareTo(new Vector(0.0, 0.5)));
 		assertEquals(1, new Vector(0.0, 0.51).compareTo(new Vector(0.0, 0.5)));
+	}
+
+	public void testLength() throws Exception
+	{
+		assertEquals(5.0, new Vector(+3.0, +4.0).length(), Vector.TOLERANCE);
+		assertEquals(5.0, new Vector(-3.0, +4.0).length(), Vector.TOLERANCE);
+		assertEquals(5.0, new Vector(+3.0, -4.0).length(), Vector.TOLERANCE);
+		assertEquals(5.0, new Vector(-3.0, -4.0).length(), Vector.TOLERANCE);
+		
+		assertEquals(1.0, new Vector(+1.0, 0.0).length(), Vector.TOLERANCE);
+		assertEquals(1.0, new Vector(-1.0, 0.0).length(), Vector.TOLERANCE);
+		assertEquals(1.0, new Vector(0.0, +1.0).length(), Vector.TOLERANCE);
+		assertEquals(1.0, new Vector(0.0, -1.0).length(), Vector.TOLERANCE);
+	}
+
+	public void testNorm() throws Exception
+	{
+		Vector v1, v2;
+		for(int i = 0; i < 100; i++)
+		{
+			v1 = new Vector(Math.random() * 2 - 1, Math.random() * 2 - 1);
+			v2 = new Vector(v1);
+
+			assertEquals(v1, v2.norm().scale(v1.length()));
+		}
+	}
+
+	public void testDot() throws Exception
+	{
+		assertEquals(0.0, new Vector(3.0, 4.0).dot(new Vector(4.0, -3.0)), Vector.TOLERANCE);
+		assertEquals(3.0, new Vector(3.0, 4.0).dot(new Vector(1.0, 0.0)), Vector.TOLERANCE);
+		assertEquals(4.0, new Vector(3.0, 4.0).dot(new Vector(0.0, 1.0)), Vector.TOLERANCE);
 	}
 }
