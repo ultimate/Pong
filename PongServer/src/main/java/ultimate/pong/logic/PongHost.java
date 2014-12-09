@@ -48,13 +48,13 @@ public abstract class PongHost
 	{
 		return clients;
 	}
-	
+
 	public void broadcast(Match match)
-	{		
+	{
 		try
 		{
 			String message = writer.writeValueAsString(match);
-			for(Client c: this.getClients())
+			for(Client c : this.getClients())
 			{
 				try
 				{
@@ -69,22 +69,27 @@ public abstract class PongHost
 		catch(IOException e)
 		{
 			logger.error("error serializing match", e);
-		}		
+		}
 	}
 
 	public abstract void startAccepting();
 
 	public abstract void stopAccepting();
 
-	public abstract class Client extends Thread
+	public abstract class Client implements Runnable
 	{
 		protected Player	player;
 
-		public Client(Player player)
+		public Client()
 		{
 			super();
-			this.player = player;
 			clients.add(this);
+		}
+
+		public void listen(Player player)
+		{
+			this.player = player;
+			new Thread(this).start();
 		}
 
 		protected void handleMessage(String message) throws IOException

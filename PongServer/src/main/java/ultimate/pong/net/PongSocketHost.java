@@ -73,14 +73,16 @@ public class PongSocketHost extends PongHost implements Runnable
 			try
 			{
 				clientSocket = this.server.accept();
+				client = new Client(clientSocket);
 				player = this.matchManager.addPlayer(match, "unnamed");
 				player.setConnected(true);
-				client = new Client(clientSocket, player);
-				client.start();
+				client.listen(player);
 			}
 			catch(SocketException e)
 			{
 				logger.info("socket closed");
+				if(this.server.isClosed())
+					break;
 			}
 			catch(IOException e)
 			{
@@ -93,10 +95,9 @@ public class PongSocketHost extends PongHost implements Runnable
 	{
 		private Socket	socket;
 
-		public Client(Socket socket, Player player)
+		public Client(Socket socket)
 		{
-			super(player);
-			this.player = player;
+			super();
 		}
 
 		public void run()

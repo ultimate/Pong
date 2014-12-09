@@ -77,7 +77,6 @@ public class PongFilter implements Filter
 			try
 			{
 				PongHost host = new PongSocketHost(this.matchManager, match, port);
-				host.startAccepting();
 			}
 			catch(BindException e)
 			{

@@ -209,6 +209,7 @@ public class MatchManagerImpl implements MatchManager
 	public synchronized void addHost(Match match, PongHost host)
 	{
 		this.hosts.get(match).add(host);
+		host.startAccepting();
 	}
 
 	@Override
@@ -230,6 +231,13 @@ public class MatchManagerImpl implements MatchManager
 			return false;
 
 		logger.info("starting match: '" + match.getName() + "'");
+		
+		// stop accepting clients
+		List<PongHost> matchHosts = hosts.get(match);
+		for(PongHost host : matchHosts)
+		{
+			host.stopAccepting();
+		}
 
 		// assign ball
 		Player randomPlayer = match.getPlayers().get(random.nextInt(match.getPlayers().size()));
