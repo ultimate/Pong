@@ -71,18 +71,7 @@ public class PongFilter implements Filter
 				return;
 			}
 
-			Match match = this.matchManager.createMatch(name);
-			match.setPort(port);
-
-			try
-			{
-				PongHost host = new PongSocketHost(this.matchManager, match, port);
-			}
-			catch(BindException e)
-			{
-				logger.error("port already in use");
-				this.matchManager.deleteMatch(match);
-			}
+			this.matchManager.createMatch(name, port);
 		}
 		else if(httpRequest.getMethod().equalsIgnoreCase("get"))
 		{

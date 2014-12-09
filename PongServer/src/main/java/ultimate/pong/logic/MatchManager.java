@@ -10,7 +10,7 @@ public interface MatchManager
 {
 	public void tick(Match match);
 
-	public Match createMatch(String name);
+	public Match createMatch(String name, int port);
 
 	public void deleteMatch(Match match);
 	

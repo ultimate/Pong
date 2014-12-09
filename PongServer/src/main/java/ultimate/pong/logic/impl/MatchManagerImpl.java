@@ -1,5 +1,6 @@
 package ultimate.pong.logic.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import ultimate.pong.logic.PongHost;
 import ultimate.pong.math.Geometry;
 import ultimate.pong.math.Physics;
 import ultimate.pong.math.Vector;
+import ultimate.pong.net.PongSocketHost;
 
 public class MatchManagerImpl implements MatchManager
 {
@@ -179,7 +181,7 @@ public class MatchManagerImpl implements MatchManager
 	}
 
 	@Override
-	public synchronized Match createMatch(String name)
+	public synchronized Match createMatch(String name, int port)
 	{
 		logger.info("creating match: '" + name + "'");
 		Match match = new Match();
@@ -189,11 +191,19 @@ public class MatchManagerImpl implements MatchManager
 		match.getMap().setColor(Color.BLACK);
 
 		this.matches.add(match);
+		
 		this.hosts.put(match, new ArrayList<PongHost>());
-
-		// debug
-		// addPlayer(match, "foo");
-		// addPlayer(match, "bar");
+		
+		try
+		{
+			this.addHost(match, new PongSocketHost(this, match, port));
+		}
+		catch(IOException e)
+		{
+			logger.error("could not create host");
+			this.deleteMatch(match);
+			match = null;
+		}
 
 		return match;
 	}
