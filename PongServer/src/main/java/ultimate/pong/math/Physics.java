@@ -48,8 +48,8 @@ public abstract class Physics
 			newDirection = Geometry.mirror(ball.getDirection(), wallVector);
 			
 			// new position
-			Vector part2M = Geometry.mirror(part2, wallVector);				// rebounce
-			newPosition = new Vector(ball.getPosition()).add(part1).add(part2M);
+			Vector part2Mirrored = Geometry.mirror(part2, wallVector);		// rebounce
+			newPosition = new Vector(ball.getPosition()).add(part1).add(part2Mirrored);
 		}
 		else if(other instanceof Slider)
 		{
@@ -68,9 +68,11 @@ public abstract class Physics
 			Vector part1 = new Vector(intersections.get(0)).sub(ballStart); // start -> intersection
 			Vector part2 = new Vector(ballEnd).sub(intersections.get(0));	// intersection -> end
 			
-			// slider mimics reflection behavior of an ellipsis with 
-			// x = tangential direction
-			// y = normal direction
+			// slider mimics behavior of an ellipsis with 
+			// x = tangential direction (of slider)
+			// y = normal direction (of slider)
+			// ball is reflected in fixed direction independently from incoming direction
+			// only depending on position of collision
 			
 			// get offset of intersection point from slider center
 			Vector sliderCenter = Geometry.center(slider.getStart(), slider.getEnd());
@@ -87,19 +89,19 @@ public abstract class Physics
 				x = -x; // collision point is in "left half" of slider
 			if(part2.dot(sliderNormal) > 0)
 				y = -y; // ball comes from "below" the slider
-			// calculate tangential vector at dt|dn
-			Vector tangent = new Vector(-a*y/b, b*x/a);
-			// apply rotation of slider by
-			// realTangent = t_x * normed(sliderVector) + t_y * normed(sliderNormal)
-			Vector realTangent = new Vector(sliderVector).norm().scale(tangent.getX()).add(new Vector(sliderNormal).norm().scale(tangent.getY()));
+			
+			// calculate normal vector at dt|dn
+			Vector normal = new Vector(b*x/a, a*y/b);
+			// get normal for real Normal
+			// realNormal = t_x * normed(sliderVector) + t_y * normed(sliderNormal)
+			Vector realNormal = new Vector(sliderVector).norm().scale(normal.getX()).add(new Vector(sliderNormal).norm().scale(normal.getY()));
 						
 			// new direction
-			newDirection = Geometry.mirror(ball.getDirection(), realTangent);
+			newDirection = new Vector(realNormal).norm().scale(ball.getDirection().length());
 			
 			// new position
-			Vector part2M = Geometry.mirror(part2, realTangent);			// rebounce
-//			System.out.println(part1 + "    " + part2 + "    " + part2M);
-			newPosition = new Vector(ball.getPosition()).add(part1).add(part2M);
+			Vector part2Normal = new Vector(realNormal).norm().scale(part2.length());
+			newPosition = new Vector(ball.getPosition()).add(part1).add(part2Normal);
 		}
 //		else if(other instanceof Ball)
 //		{

@@ -67,7 +67,7 @@ public class PhysicsTest extends TestCase
 	{
 		Slider slider = new Slider(new Vector(-1.0, 1.0), new Vector(+1.0, 1.0));
 
-		Ball ball;
+		Ball ball, ball2, ball3;
 		Vector position;
 		Vector direction;
 		
@@ -89,30 +89,29 @@ public class PhysicsTest extends TestCase
 		assertEquals(position, ball.getPosition()); // unchanged
 		assertEquals(direction.scale(-1), ball.getDirection()); // mirrored
 		
-		// check vertical up // with offset from center
 		double lastY = Double.POSITIVE_INFINITY;
 		for(double x = -9; x < 10; x++)
 		{
+			// check vertical up // with offset from center
 			position = new Vector(x/10.0, 0.0);
 			direction = new Vector(0.0, 2.0);
 			ball = new Ball(position, direction);
 			
 			Physics.interact(ball, slider);
-			
 			System.out.println(ball.getPosition() + " - " + ball.getDirection());
 			
 			// check plausibility
 			if(x < 0)
 			{
 				// left of center
-				assertTrue(ball.getPosition().getX() < 2*position.getX());
+				assertTrue(ball.getPosition().getX() < position.getX());
 				assertTrue(ball.getPosition().getY() > 0);
 				assertTrue(ball.getPosition().getY() < lastY);
 			}
 			else if(x > 0)
 			{
 				// right of center
-				assertTrue(ball.getPosition().getX() > 2*position.getX());
+				assertTrue(ball.getPosition().getX() > position.getX());
 				assertTrue(ball.getPosition().getY() > 0);
 				assertTrue(ball.getPosition().getY() > lastY);
 			}
@@ -122,42 +121,37 @@ public class PhysicsTest extends TestCase
 			}
 			
 			lastY = ball.getPosition().getY();
-		}
-		
-		System.out.println();
-		
-		// check 45°
-		for(double x = -9; x < 10; x++)
-		{
+			
+			double sqrt05 = Math.sqrt(0.5);
+			
+			// check 45° from different position but with same collision point
+			// and same remaining part2 after collision as above
+			// --> should result in same position (but different speed)
+
 			position = new Vector(x/10.0 - 1.0, 0.0);
-			direction = new Vector(2.0, 2.0);
-			ball = new Ball(position, direction);
+			direction = new Vector(1 + sqrt05, 1 + sqrt05); 
+			ball2 = new Ball(position, direction);
 			
-			Physics.interact(ball, slider);
+			Physics.interact(ball2, slider);
+			System.out.println(ball2.getPosition() + " - " + ball2.getDirection());
 			
-			System.out.println(ball.getPosition() + " - " + ball.getDirection());
+			assertEquals(ball.getPosition(), ball2.getPosition());
 			
-//			// check plausibility
-//			if(x < 0)
-//			{
-//				// left of center
-//				assertTrue(ball.getPosition().getX() < 2*position.getX());
-//				assertTrue(ball.getPosition().getY() > 0);
-//				assertTrue(ball.getPosition().getY() < lastY);
-//			}
-//			else if(x > 0)
-//			{
-//				// right of center
-//				assertTrue(ball.getPosition().getX() > 2*position.getX());
-//				assertTrue(ball.getPosition().getY() > 0);
-//				assertTrue(ball.getPosition().getY() > lastY);
-//			}
-//			else
-//			{
-//				assertEquals(position, ball.getPosition());
-//			}
-//			
-//			lastY = ball.getPosition().getY();
+			// check -45° 
+			// --> should result in same position
+			// --> and same speed as +45°
+
+			position = new Vector(x/10.0 + 1.0, 0.0);
+			direction = new Vector(-(1 + sqrt05), 1 + sqrt05); 
+			ball3 = new Ball(position, direction);
+			
+			Physics.interact(ball3, slider);
+			System.out.println(ball3.getPosition() + " - " + ball3.getDirection());
+			
+			assertEquals(ball.getPosition(), ball2.getPosition());
+			assertEquals(ball2.getDirection(), ball3.getDirection());
+			
+			System.out.println();
 		}
 	}
 }
