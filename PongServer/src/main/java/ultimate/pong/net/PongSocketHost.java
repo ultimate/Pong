@@ -68,15 +68,18 @@ public class PongSocketHost extends PongHost implements Runnable
 		Socket clientSocket;
 		Player player;
 		Client client;
+		logger.info("listening: " + this.server.getLocalPort());
 		while(match.getState() == EnumMatchState.waiting)
 		{
 			try
 			{
 				clientSocket = this.server.accept();
+				logger.info("client connected");
 				client = new Client(clientSocket);
 				player = this.matchManager.addPlayer(match, "unnamed");
 				player.setConnected(true);
 				client.listen(player);
+				this.matchManager.tick(match);
 			}
 			catch(SocketException e)
 			{
@@ -98,6 +101,7 @@ public class PongSocketHost extends PongHost implements Runnable
 		public Client(Socket socket)
 		{
 			super();
+			this.socket = socket;
 		}
 
 		public void run()
@@ -112,8 +116,8 @@ public class PongSocketHost extends PongHost implements Runnable
 					if(c == -1)
 						break;
 
-					sb.append(c);
-
+					sb.append((char) c);
+					
 					if(sb.length() > DELIM.length())
 					{
 						boolean delimFound = true;

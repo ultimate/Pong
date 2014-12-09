@@ -1,7 +1,6 @@
 package ultimate.pong.net;
 
 import java.io.IOException;
-import java.net.BindException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -15,9 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ultimate.pong.data.model.Match;
 import ultimate.pong.logic.MatchManager;
-import ultimate.pong.logic.PongHost;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -63,7 +60,7 @@ public class PongFilter implements Filter
 			String name = httpRequest.getParameter(PARAM_NAME);
 			int port = Integer.parseInt(httpRequest.getParameter(PARAM_PORT));
 
-			logger.info("incoming post: name='" + name + "', port=" + port);
+			logger.debug("incoming post: name='" + name + "', port=" + port);
 
 			if(name == null || port <= 0 || port > 65535)
 			{
@@ -75,7 +72,7 @@ public class PongFilter implements Filter
 		}
 		else if(httpRequest.getMethod().equalsIgnoreCase("get"))
 		{
-			logger.info("incoming get");
+			logger.debug("incoming get");
 		}
 		else
 		{

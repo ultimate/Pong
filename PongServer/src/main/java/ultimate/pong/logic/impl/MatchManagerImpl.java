@@ -16,6 +16,7 @@ import ultimate.pong.data.model.MapObject;
 import ultimate.pong.data.model.Match;
 import ultimate.pong.data.model.Player;
 import ultimate.pong.data.model.objects.Ball;
+import ultimate.pong.data.model.objects.Slider;
 import ultimate.pong.data.model.objects.Wall;
 import ultimate.pong.enums.EnumMatchState;
 import ultimate.pong.logic.MatchManager;
@@ -109,6 +110,8 @@ public class MatchManagerImpl implements MatchManager
 					p = match.getPlayers().get(i);
 					c = p.getCommands().get(p.getCommands().size() - 1);
 					// move slider
+					// TODO
+					updateSlider(p, match.getPlayers().size(), i);
 					// release
 					if(c.isRelease() && p.isBall())
 					{
@@ -197,6 +200,7 @@ public class MatchManagerImpl implements MatchManager
 		try
 		{
 			this.addHost(match, new PongSocketHost(this, match, port));
+			match.setPort(port);
 		}
 		catch(IOException e)
 		{
@@ -253,12 +257,6 @@ public class MatchManagerImpl implements MatchManager
 		Player randomPlayer = match.getPlayers().get(random.nextInt(match.getPlayers().size()));
 		randomPlayer.setBall(true);
 
-		// add sliders as Map Object
-		for(Player p : match.getPlayers())
-		{
-			match.getMap().getObjects().add(p.getSlider());
-		}
-
 		Ticker ticker = new Ticker(match);
 		ticker.start();
 
@@ -281,11 +279,11 @@ public class MatchManagerImpl implements MatchManager
 		player.setColor(randomColor());
 		player.setSliderPosition(0.5);
 		player.setSliderSize(sliderSize);
-
+		
 		match.getPlayers().add(player);
 
 		rebuild(match); // for new player count
-
+		
 		return player;
 	}
 
@@ -325,11 +323,40 @@ public class MatchManagerImpl implements MatchManager
 			w.setEnd(Geometry.getEndCornerPoint(playerCount * 2, i * 2 + 1));
 			match.getMap().getObjects().add(w);
 		}
+		// add sliders as Map Object
+		Player p;
+		for(int i = 0; i < match.getPlayers().size(); i++)
+		{
+			p = match.getPlayers().get(i);
+			updateSlider(p, playerCount, i);
+			match.getMap().getObjects().add(p.getSlider());
+		}
 	}
 
 	protected Color randomColor()
 	{
 		return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+	}
+	
+	protected void updateSlider(Player player, int playerCount, int playerIndex)
+	{
+		Slider slider = player.getSlider();
+		double position = player.getSliderPosition();
+		double size = player.getSliderSize();
+		
+		double startPos = position - size/2;
+		double endPos = position + size/2;
+
+		Vector startCorner = Geometry.getStartCornerPoint(playerCount * 2, playerIndex * 2 );
+		Vector endCorner = Geometry.getEndCornerPoint(playerCount * 2, playerIndex * 2);
+		
+		Vector edge = new Vector(endCorner).sub(startCorner);
+		
+		Vector start = new Vector(startCorner).add(new Vector(edge).scale(startPos));
+		Vector end = new Vector(startCorner).add(new Vector(edge).scale(endPos));
+
+		slider.setStart(start);
+		slider.setEnd(end);
 	}
 
 	protected class Ticker extends Thread

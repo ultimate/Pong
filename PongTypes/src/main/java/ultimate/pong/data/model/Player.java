@@ -57,6 +57,8 @@ public class Player
 	public void setColor(Color color)
 	{
 		this.color = color;
+		if(this.slider != null)
+			this.slider.setColor(color);
 	}
 
 	public int getScore()

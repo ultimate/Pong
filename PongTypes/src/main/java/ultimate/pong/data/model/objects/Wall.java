@@ -20,7 +20,7 @@ public class Wall extends MapObject implements Polygon
 
 	public Wall(Vector start, Vector end)
 	{
-		super(EnumObjectType.slider);
+		super(EnumObjectType.wall);
 		this.setStart(start);
 		this.setEnd(end);
 	}

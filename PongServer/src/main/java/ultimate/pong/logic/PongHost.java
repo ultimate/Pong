@@ -39,7 +39,6 @@ public abstract class PongHost
 	{
 		super();
 		this.matchManager = matchManager;
-		this.matchManager.addHost(match, this);
 		this.match = match;
 		this.clients = new ArrayList<Client>();
 	}
@@ -89,7 +88,26 @@ public abstract class PongHost
 		public void listen(Player player)
 		{
 			this.player = player;
-			new Thread(this).start();
+			new Thread() {
+
+				@Override
+				public void run()
+				{
+					
+					try
+					{
+						Client.this.run();
+					}
+					catch(Exception e)
+					{
+						logger.error("exception running client", e);
+					}
+
+					Client.this.player.setConnected(false);
+					clients.remove(Client.this);
+					matchManager.tick(match);
+				}
+			}.start();
 		}
 
 		protected void handleMessage(String message) throws IOException

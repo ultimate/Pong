@@ -91,6 +91,6 @@ public class Slider extends MapObject implements Polygon
 	@Override
 	public List<Vector> getPoints()
 	{
-		return Arrays.asList(new Vector[] {start, end});
+		return Arrays.asList(new Vector[] { start, end });
 	}
 }
