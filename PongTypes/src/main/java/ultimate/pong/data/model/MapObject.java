@@ -1,13 +1,20 @@
 package ultimate.pong.data.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import ultimate.pong.enums.EnumObjectType;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MapObject
 {
-	protected Integer	id;
-	protected String	name;
-	protected EnumObjectType	type;
-	protected Color		color;
+	protected Integer				id;
+	protected String				name;
+	protected EnumObjectType		type;
+	protected Color					color;
+	protected List<EnumObjectType>	collisions	= new ArrayList<EnumObjectType>();
 
 	public MapObject()
 	{
@@ -53,6 +60,16 @@ public class MapObject
 	public EnumObjectType getType()
 	{
 		return type;
+	}
+
+	public List<EnumObjectType> getCollisions()
+	{
+		return collisions;
+	}
+
+	public void setCollisions(List<EnumObjectType> collisions)
+	{
+		this.collisions = collisions;
 	}
 
 	@Override

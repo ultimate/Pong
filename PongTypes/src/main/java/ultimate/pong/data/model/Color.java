@@ -1,5 +1,8 @@
 package ultimate.pong.data.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Color
 {
 	public final static Color	WHITE		= new Color(255, 255, 255);

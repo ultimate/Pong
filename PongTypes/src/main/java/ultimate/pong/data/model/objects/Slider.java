@@ -3,11 +3,15 @@ package ultimate.pong.data.model.objects;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import ultimate.pong.data.model.MapObject;
 import ultimate.pong.enums.EnumObjectType;
 import ultimate.pong.math.Polygon;
 import ultimate.pong.math.Vector;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Slider extends MapObject implements Polygon
 {
 	protected Vector	start;
@@ -88,6 +92,7 @@ public class Slider extends MapObject implements Polygon
 		return "Slider [start=" + start + ", end=" + end + "]";
 	}
 
+	@JsonIgnore
 	@Override
 	public List<Vector> getPoints()
 	{

@@ -5,6 +5,10 @@ import java.util.List;
 
 import ultimate.pong.data.model.objects.Slider;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Player
 {
 	protected Integer		id;
@@ -19,6 +23,7 @@ public class Player
 	protected double		sliderSize;
 	protected double		sliderPosition;
 
+	@JsonIgnore
 	protected List<Command>	commands;
 
 	public Player()

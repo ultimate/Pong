@@ -1,63 +1,35 @@
 package ultimate.pong;
 
-import java.awt.Color;
 import java.io.IOException;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import ultimate.pong.data.model.Color;
+import ultimate.pong.data.model.Command;
+import ultimate.pong.data.model.Map;
+import ultimate.pong.data.model.MapObject;
+import ultimate.pong.data.model.Match;
+import ultimate.pong.data.model.Player;
+import ultimate.pong.data.model.objects.Ball;
+import ultimate.pong.data.model.objects.Slider;
+import ultimate.pong.data.model.objects.Wall;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class TestSomething
 {
-	abstract class ColorMixIn
-	{
-		public ColorMixIn(@JsonProperty("r") int r, @JsonProperty("g") int g, @JsonProperty("b") int b)
-		{
-		}
-
-		@JsonProperty("r")
-		abstract int getRed();
-
-		@JsonProperty("g")
-		abstract int getGreen();
-
-		@JsonProperty("b")
-		abstract int getBlue();
-
-		@JsonIgnore
-		abstract int getAlpha();
-		
-		@JsonIgnore
-		abstract int getTransparency();
-		
-		@JsonIgnore
-		abstract int getColorSpace();
-
-		@JsonIgnore
-		abstract int getRGB();
-	};
-
 	public static void main(String[] args) throws IOException
 	{
 		ObjectMapper mapper = new ObjectMapper();
-		mapper.addMixInAnnotations(Color.class, ColorMixIn.class);
 		ObjectWriter writer = mapper.writer();
-		ObjectReader reader = mapper.reader(Color.class);
 
-		Color[] colors = { Color.WHITE, Color.RED, Color.GREEN, Color.BLUE, Color.BLACK };
-
-		String s;
-		Color c2;
-		for(Color c : colors)
-		{
-			System.out.println(c); 					// java.awt.Color[r=255,g=255,b=255]
-			s = writer.writeValueAsString(c);		
-			System.out.println(s);					// {"b":255,"g":255,"r":255}
-			c2 = reader.readValue(s);				// --> fails
-			System.out.println(c2);
-			System.out.println("equal ? " + c2.equals(c));
-		}
+		System.out.println(writer.writeValueAsString(new Color()));
+		System.out.println(writer.writeValueAsString(new Command()));
+		System.out.println(writer.writeValueAsString(new Map()));
+		System.out.println(writer.writeValueAsString(new MapObject()));
+		System.out.println(writer.writeValueAsString(new Match()));
+		System.out.println(writer.writeValueAsString(new Player()));
+		System.out.println(writer.writeValueAsString(new Ball()));
+		System.out.println(writer.writeValueAsString(new Slider()));
+		System.out.println(writer.writeValueAsString(new Wall()));
 	}
 }

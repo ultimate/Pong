@@ -5,11 +5,17 @@ import ultimate.pong.data.model.Player;
 import ultimate.pong.enums.EnumObjectType;
 import ultimate.pong.math.Vector;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Ball extends MapObject
 {
-	protected Vector	position;
-	protected Vector	direction;
-	protected Player	lastContact;
+	protected Vector				position;
+	protected Vector				direction;
+
+	@JsonIgnore
+	protected Player				lastContact;
 
 	public Ball()
 	{

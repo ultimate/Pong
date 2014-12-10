@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import ultimate.pong.data.model.Command;
 import ultimate.pong.logic.PongHost;
@@ -25,7 +26,7 @@ public class TestClient
 		Map<String, Object> playerInfo = new HashMap<String, Object>();
 		playerInfo.put("name", name);
 		playerInfo.put("ready", true);
-
+		
 		Socket so = null;
 		try
 		{
@@ -33,19 +34,45 @@ public class TestClient
 			
 			System.out.println("connected");
 			
+			try
+			{
+				Thread.sleep(10000);
+			}
+			catch(InterruptedException e1)
+			{
+				e1.printStackTrace();
+			}
+			
 			so.getOutputStream().write(writer.writeValueAsString(playerInfo).getBytes());
 			so.getOutputStream().write(PongHost.DELIM.getBytes());
 			so.getOutputStream().flush();
 			
+			System.out.println("ready");
+			
+			double speed = 0.05;
+			double pos = 0.5;
+			double dir = speed;
+			
 			while(true)
 			{
-				so.getOutputStream().write(writer.writeValueAsString(new Command(null, Math.random(), true)).getBytes());
+				pos += dir;
+				if(pos >= 1.0)
+					dir = -speed;
+				else if(pos <= 0.0)
+					dir = +speed;
+				
+				so.getOutputStream().write(writer.writeValueAsString(new Command(null, pos, true)).getBytes());
 				so.getOutputStream().write(PongHost.DELIM.getBytes());
 				so.getOutputStream().flush();
 				
+				while(so.getInputStream().available() > 0)
+				{
+					so.getInputStream().read();
+				}
+				
 				try
 				{
-					Thread.sleep(1000);
+					Thread.sleep(500);
 				}
 				catch(InterruptedException e)
 				{

@@ -1,10 +1,16 @@
 package ultimate.pong.data.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Command
 {
+	@JsonIgnore
 	protected Player	player;
 	protected double	sliderPosition;
 	protected boolean	release;
+	@JsonIgnore
 	protected int		tick;
 
 	public Command()

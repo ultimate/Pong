@@ -83,7 +83,7 @@ visualize = function(matches)
 			drawContext.lineTo(end.x, end.y);			
 			drawContext.stroke();
 			
-			console.log(object.type + ": (" + start.x + "," + start.y + ") -> (" + end.x + "," + end.y + ")")
+//			console.log(object.type + ": (" + start.x + "," + start.y + ") -> (" + end.x + "," + end.y + ")")
 		}
 		else if(object.type == "ball")
 		{
@@ -104,7 +104,7 @@ visualize = function(matches)
 
 toColor = function(rgb)
 {
-	return "rgb(" + rgb.r + "," + rgb.g + "," + rgb.b + ")";
+	return ["rgb(", rgb.r , "," , rgb.g , "," , rgb.b , ")"].join("");
 };
 
 toScreenXY = function(pos, w, h)

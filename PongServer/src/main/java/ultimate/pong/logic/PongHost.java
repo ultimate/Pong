@@ -2,6 +2,7 @@ package ultimate.pong.logic;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import ultimate.pong.data.model.Match;
 import ultimate.pong.data.model.Player;
 import ultimate.pong.enums.EnumMatchState;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -31,7 +33,7 @@ public abstract class PongHost
 
 	protected ObjectMapper				mapper			= new ObjectMapper();
 	protected ObjectWriter				writer			= mapper.writer();
-	protected ObjectReader				mapReader		= mapper.reader();
+	protected ObjectReader				mapReader		= mapper.reader().withType(new TypeReference<HashMap<String,String>>(){});
 	protected ObjectReader				playerReader	= mapper.reader().withType(Player.class);
 	protected ObjectReader				commandReader	= mapper.reader().withType(Command.class);
 
@@ -89,7 +91,6 @@ public abstract class PongHost
 		{
 			this.player = player;
 			new Thread() {
-
 				@Override
 				public void run()
 				{
@@ -119,12 +120,26 @@ public abstract class PongHost
 				// therefore use a map to check wether given keys are present.
 				Map<String, Object> playerUpdateMap = mapReader.readValue(message);
 				Player playerUpdate = playerReader.readValue(message);
+				boolean update = false;
 				if(playerUpdateMap.containsKey("name"))
+				{
 					this.player.setName(playerUpdate.getName());
+					update = true;
+				}
 				if(playerUpdateMap.containsKey("color"))
+				{
 					this.player.setColor(playerUpdate.getColor());
+					update = true;
+				}
 				if(playerUpdateMap.containsKey("ready"))
+				{
 					this.player.setReady(playerUpdate.isReady());
+					update = true;
+				}
+				if(update)
+				{
+					matchManager.tick(match);
+				}
 			}
 			else if(match.getState() == EnumMatchState.running)
 			{

@@ -36,7 +36,7 @@ public abstract class Physics
 			intersections = Geometry.intersect(wall, ballLine);
 			// should have 1 or 0 intersections
 			if(intersections.size() == 0)
-				return; // no collision
+				return; // no collision			
 			
 			Vector wallVector = new Vector(wall.getEnd()).sub(wall.getStart());
 			
@@ -114,6 +114,9 @@ public abstract class Physics
 		
 		ball.setPosition(newPosition);
 		ball.setDirection(newDirection);
+		ball.getCollisions().add(other.getType());
+		
+		other.getCollisions().add(ball.getType());
 	}
 
 	public static void interact(List<MapObject> objects)

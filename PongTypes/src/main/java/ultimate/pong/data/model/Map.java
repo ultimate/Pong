@@ -3,6 +3,9 @@ package ultimate.pong.data.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Map
 {
 	protected Color				color;

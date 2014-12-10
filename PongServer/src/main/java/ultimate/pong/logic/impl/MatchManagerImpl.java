@@ -31,7 +31,7 @@ public class MatchManagerImpl implements MatchManager
 	protected transient final Logger			logger		= LoggerFactory.getLogger(getClass());
 
 	protected List<Match>						matches		= new ArrayList<Match>();
-	protected HashMap<Match, List<PongHost>>	hosts		= new HashMap<Match, List<PongHost>>();
+	protected HashMap<Integer, List<PongHost>>	hosts		= new HashMap<Integer, List<PongHost>>();
 	protected List<Ticker>						tickers		= new ArrayList<Ticker>();
 
 	protected int								objectIdCounter;
@@ -64,7 +64,7 @@ public class MatchManagerImpl implements MatchManager
 	@Override
 	public synchronized void tick(Match match)
 	{
-		logger.info("match tick #" + match.getTick());
+		logger.debug("match tick #" + match.getTick());
 
 		switch(match.getState())
 		{
@@ -89,18 +89,35 @@ public class MatchManagerImpl implements MatchManager
 				break;
 
 			case running:
+				
+				// update tick
+				match.setTick(match.getTick() + 1);
+				
+				// store number of corners for convenience
 				int corners = match.getPlayers().size() * 2;
 
 				// check disconnected players
+				int connected = 0;
 				for(Player p : match.getPlayers())
 				{
-					if(!p.isConnected())
+					if(p.isConnected())
+					{
+						connected++;
+					}
+					else
 					{
 						// update slider to act as a wall
 						p.setSliderPosition(0.5);
 						p.setSliderSize(1.0);
 					}
 				}
+				
+				// check if there are at least 2 active players
+				if(connected < 2)
+				{
+					match.setState(EnumMatchState.finished);
+					break;
+				}				
 
 				// apply commands
 				Command c;
@@ -108,29 +125,42 @@ public class MatchManagerImpl implements MatchManager
 				for(int i = 0; i < match.getPlayers().size(); i++)
 				{
 					p = match.getPlayers().get(i);
-					c = p.getCommands().get(p.getCommands().size() - 1);
-					// move slider
-					// TODO
-					updateSlider(p, match.getPlayers().size(), i);
-					// release
-					if(c.isRelease() && p.isBall())
+					c = getCommand(p, match.getTick());
+					if(c != null)
 					{
-						Ball ball = new Ball();
-						ball.setId(++objectIdCounter);
-						ball.setName("ball");
-						ball.setPosition(Geometry.center(p.getSlider().getStart(), p.getSlider().getEnd()));
-						// get direction from players slider range center in order to start
-						// orthogonal
-						Vector playerCenter = Geometry.getCenterPoint(corners, i * 2);
-						double angle = Geometry.angle(playerCenter);
-						ball.setDirection(Geometry.direction(angle + Math.PI).scale(0.005));
-						// last contact is releasing player (use player color)
-						ball.setLastContact(p);
+						// move slider
+						p.setSliderPosition(c.getSliderPosition());
+						// TODO
+						
+						
+						updateSlider(p, match.getPlayers().size(), i);
+						// release
+						if(c.isRelease() && p.isBall())
+						{
+							Ball ball = new Ball();
+							ball.setId(++objectIdCounter);
+							ball.setName("ball");
+							ball.setPosition(Geometry.center(p.getSlider().getStart(), p.getSlider().getEnd()));
+							// get direction from players slider range center in order to start
+							// orthogonal
+							Vector playerCenter = Geometry.getCenterPoint(corners, i * 2);
+							double angle = Geometry.angle(playerCenter);
+							ball.setDirection(Geometry.direction(angle + Math.PI).scale(0.005));
+							// last contact is releasing player (use player color)
+							ball.setLastContact(p);
+						}
 					}
 				}
-
+				
 				// handle map objects
 				List<MapObject> objects = match.getMap().getObjects();
+
+				// clear collisions
+				for(MapObject obj : objects)
+				{
+					obj.getCollisions().clear();
+				}
+
 				// consider interaction between objects
 				Physics.interact(objects);
 
@@ -176,7 +206,7 @@ public class MatchManagerImpl implements MatchManager
 				break;
 		}
 
-		List<PongHost> matchHosts = hosts.get(match);
+		List<PongHost> matchHosts = this.hosts.get(match.getId());
 		for(PongHost host : matchHosts)
 		{
 			host.broadcast(match);
@@ -195,7 +225,7 @@ public class MatchManagerImpl implements MatchManager
 
 		this.matches.add(match);
 		
-		this.hosts.put(match, new ArrayList<PongHost>());
+		this.hosts.put(match.getId(), new ArrayList<PongHost>());
 		
 		try
 		{
@@ -216,13 +246,13 @@ public class MatchManagerImpl implements MatchManager
 	public synchronized void deleteMatch(Match match)
 	{
 		this.matches.remove(match);
-		this.hosts.remove(match);
+		this.hosts.remove(match.getId());
 	}
 
 	@Override
 	public synchronized void addHost(Match match, PongHost host)
 	{
-		this.hosts.get(match).add(host);
+		this.hosts.get(match.getId()).add(host);
 		host.startAccepting();
 	}
 
@@ -235,23 +265,29 @@ public class MatchManagerImpl implements MatchManager
 			if(player.isReady())
 				ready++;
 		}
+		logger.info("players ready: " + ready + " of " + match.getPlayers().size());
 		return ready > 1 && ready == match.getPlayers().size();
 	}
 
 	@Override
 	public synchronized boolean start(Match match)
 	{
+		logger.debug("attempt to start match: '" + match.getName() + "'");
+		
 		if(!isReady(match))
 			return false;
 
 		logger.info("starting match: '" + match.getName() + "'");
 		
 		// stop accepting clients
-		List<PongHost> matchHosts = hosts.get(match);
+		List<PongHost> matchHosts = this.hosts.get(match.getId());
 		for(PongHost host : matchHosts)
 		{
 			host.stopAccepting();
 		}
+		
+		// set running
+		match.setState(EnumMatchState.running);
 
 		// assign ball
 		Player randomPlayer = match.getPlayers().get(random.nextInt(match.getPlayers().size()));
@@ -290,13 +326,28 @@ public class MatchManagerImpl implements MatchManager
 	@Override
 	public synchronized void command(Match match, Command command)
 	{
+		logger.info("player command: " + command.getPlayer().getId() + " pos=" + command.getSliderPosition());
+		
 		int nextTick = match.getTick() + 1;
 		List<Command> playerCommands = command.getPlayer().getCommands();
-		if(playerCommands.get(playerCommands.size() - 1).getTick() == nextTick)
-			// command already sent for this tick -> remove for override
-			command.getPlayer().getCommands().remove(playerCommands.size() - 1);
+		Command next = getCommand(command.getPlayer(), nextTick);
+		if(next != null)
+			// command already sent for next tick -> remove for override
+			command.getPlayer().getCommands().remove(next);
 		command.setTick(nextTick);
 		playerCommands.add(command);
+	}
+	
+	protected Command getCommand(Player player, int tick)
+	{
+		if(player.getCommands() == null)
+			return null;
+		if(player.getCommands().size() == 0)
+			return null;
+		Command last = player.getCommands().get(player.getCommands().size() - 1);
+		if(last.getTick() != tick)
+			return null;
+		return last;
 	}
 
 	protected void rebuild(Match match)
@@ -371,20 +422,24 @@ public class MatchManagerImpl implements MatchManager
 
 		public void run()
 		{
-			long start, end;
+			long start, end, sleep;
 			while(match.getState() != EnumMatchState.finished)
 			{
 				start = System.currentTimeMillis();
 				tick(match);
 				end = System.currentTimeMillis();
 
-				try
+				sleep = interval - (end-start);
+				if(sleep > 0)
 				{
-					Thread.sleep(interval - (end - start));
-				}
-				catch(InterruptedException e)
-				{
-					logger.error("could not sleep", e);
+					try
+					{
+						Thread.sleep(sleep);
+					}
+					catch(InterruptedException e)
+					{
+						logger.error("could not sleep", e);
+					}
 				}
 			}
 

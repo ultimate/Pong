@@ -139,7 +139,7 @@ public class PongSocketHost extends PongHost implements Runnable
 							}
 							catch(IOException e)
 							{
-								logger.error("could not handle client message:\n" + sb.toString());
+								logger.error("could not handle client message:\n" + sb.toString(), e);
 							}
 							finally
 							{
