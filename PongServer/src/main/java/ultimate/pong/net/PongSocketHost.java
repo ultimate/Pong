@@ -144,7 +144,9 @@ public class PongSocketHost extends PongHost implements Runnable
 							finally
 							{
 								// clear buffer
-								sb.delete(0, sb.length());
+//								sb.delete(0, sb.length());
+//								Thread.sleep(1);
+								sb = new StringBuffer();
 							}
 						}
 					}

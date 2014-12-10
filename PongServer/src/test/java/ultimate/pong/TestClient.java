@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import ultimate.pong.data.model.Command;
 import ultimate.pong.logic.PongHost;
@@ -14,45 +13,45 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class TestClient
 {
-	public static void main(String[] args) throws IOException
+	public static void main(String[] args) throws Exception
 	{
+		final int port = 5555;
+		int players = 2;
+
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectWriter writer = mapper.writer();
 
-		int port = 5555;
+		Socket[] sockets = new Socket[players];
+		int[] messagesSent = new int[players];
 
-		String name = "player" + System.currentTimeMillis();
-
-		Map<String, Object> playerInfo = new HashMap<String, Object>();
-		playerInfo.put("name", name);
-		playerInfo.put("ready", true);
-		
-		Socket so = null;
 		try
 		{
-			so = new Socket("localhost", port);
-			
-			System.out.println("connected");
-			
-			try
+
+			for(int i = 0; i < players; i++)
 			{
-				Thread.sleep(10000);
+				sockets[i] = new Socket("localhost", port);
+				System.out.println(i + ": connected");
 			}
-			catch(InterruptedException e1)
+
+			Thread.sleep(1000);
+
+			for(int i = 0; i < players; i++)
 			{
-				e1.printStackTrace();
+				Map<String, Object> playerInfo = new HashMap<String, Object>();
+				playerInfo.put("name", "player" + i);
+				playerInfo.put("ready", true);
+
+				sockets[i].getOutputStream().write(writer.writeValueAsString(playerInfo).getBytes());
+				sockets[i].getOutputStream().write(PongHost.DELIM.getBytes());
+				sockets[i].getOutputStream().flush();
+
+				System.out.println(i + ": ready");
 			}
-			
-			so.getOutputStream().write(writer.writeValueAsString(playerInfo).getBytes());
-			so.getOutputStream().write(PongHost.DELIM.getBytes());
-			so.getOutputStream().flush();
-			
-			System.out.println("ready");
-			
+
 			double speed = 0.05;
 			double pos = 0.5;
 			double dir = speed;
-			
+
 			while(true)
 			{
 				pos += dir;
@@ -60,30 +59,42 @@ public class TestClient
 					dir = -speed;
 				else if(pos <= 0.0)
 					dir = +speed;
-				
-				so.getOutputStream().write(writer.writeValueAsString(new Command(null, pos, true)).getBytes());
-				so.getOutputStream().write(PongHost.DELIM.getBytes());
-				so.getOutputStream().flush();
-				
-				while(so.getInputStream().available() > 0)
+
+				for(int i = 0; i < players; i++)
 				{
-					so.getInputStream().read();
+					sockets[i].getOutputStream().write(writer.writeValueAsString(new Command(null, pos, true)).getBytes());
+					sockets[i].getOutputStream().write(PongHost.DELIM.getBytes());
+					sockets[i].getOutputStream().flush();
+					messagesSent[i]++;
+					if(messagesSent[i] % 100 == 0)
+						System.out.println(i + ": " + messagesSent[i]);
+
+					while(sockets[i].getInputStream().available() > 0)
+						sockets[i].getInputStream().read();
 				}
-				
+
+				Thread.sleep(10);
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			for(int i = 0; i < players; i++)
+			{
+				if(sockets[i] == null)
+					continue;
 				try
 				{
-					Thread.sleep(500);
+					sockets[i].close();
 				}
-				catch(InterruptedException e)
+				catch(IOException e)
 				{
 					e.printStackTrace();
 				}
 			}
-		}
-		finally
-		{
-			if(so != null)
-				so.close();
 		}
 	}
 }

@@ -326,7 +326,7 @@ public class MatchManagerImpl implements MatchManager
 	@Override
 	public synchronized void command(Match match, Command command)
 	{
-		logger.info("player command: " + command.getPlayer().getId() + " pos=" + command.getSliderPosition());
+		logger.debug("player command: " + command.getPlayer().getId() + " pos=" + command.getSliderPosition());
 		
 		int nextTick = match.getTick() + 1;
 		List<Command> playerCommands = command.getPlayer().getCommands();

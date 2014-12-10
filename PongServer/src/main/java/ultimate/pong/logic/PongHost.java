@@ -80,6 +80,8 @@ public abstract class PongHost
 	public abstract class Client implements Runnable
 	{
 		protected Player	player;
+		
+		protected int messagesHandled = 0;
 
 		public Client()
 		{
@@ -151,6 +153,11 @@ public abstract class PongHost
 			{
 				logger.warn("illegal state?!");
 			}
+			
+			messagesHandled++;
+			
+//			if(messagesHandled % 100 == 0)
+//				logger.info(player.getId() + ": " + messagesHandled);
 		}
 
 		protected abstract void sendMessage(String message) throws IOException;
