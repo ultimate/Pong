@@ -160,6 +160,9 @@ public class MatchManagerImpl implements MatchManager
 				{
 					obj.getCollisions().clear();
 				}
+				
+				// TODO move ball
+				// TODO do not apply multiple collisions
 
 				// consider interaction between objects
 				Physics.interact(objects);
