@@ -11,6 +11,7 @@
 		<property name="interval" value="10">
 		<property name="maxScore" value="10">
 		<property name="sliderSize" value="0.1">
+		<property name="ballReleaseSpeed" value="0.005">
 		-->
 	</bean>
 	

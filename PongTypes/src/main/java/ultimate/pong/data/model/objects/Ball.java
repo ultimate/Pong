@@ -1,5 +1,8 @@
 package ultimate.pong.data.model.objects;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import ultimate.pong.data.model.MapObject;
 import ultimate.pong.data.model.Player;
 import ultimate.pong.enums.EnumObjectType;
@@ -11,11 +14,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Ball extends MapObject
 {
-	protected Vector				position;
-	protected Vector				direction;
+	protected Vector		position;
+	protected Vector		direction;
 
+	protected List<Vector>	path;
+	// @JsonIgnore
+	// protected Vector newPosition;
+	// @JsonIgnore
+	// protected Vector newDirection;
 	@JsonIgnore
-	protected Player				lastContact;
+	protected Player		lastContact;
 
 	public Ball()
 	{
@@ -27,6 +35,7 @@ public class Ball extends MapObject
 		this();
 		this.position = position;
 		this.direction = direction;
+		this.path = new LinkedList<Vector>();
 	}
 
 	public Vector getPosition()
@@ -48,6 +57,36 @@ public class Ball extends MapObject
 	{
 		this.direction = direction;
 	}
+
+	public List<Vector> getPath()
+	{
+		return path;
+	}
+
+	public void setPath(List<Vector> path)
+	{
+		this.path = path;
+	}
+
+	// public Vector getNewPosition()
+	// {
+	// return newPosition;
+	// }
+	//
+	// public void setNewPosition(Vector newPosition)
+	// {
+	// this.newPosition = newPosition;
+	// }
+	//
+	// public Vector getNewDirection()
+	// {
+	// return newDirection;
+	// }
+	//
+	// public void setNewDirection(Vector newDirection)
+	// {
+	// this.newDirection = newDirection;
+	// }
 
 	public Player getLastContact()
 	{

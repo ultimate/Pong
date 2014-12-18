@@ -28,20 +28,38 @@ import ultimate.pong.net.PongSocketHost;
 
 public class MatchManagerImpl implements MatchManager
 {
-	protected transient final Logger			logger		= LoggerFactory.getLogger(getClass());
+	protected transient final Logger			logger						= LoggerFactory.getLogger(getClass());
 
-	protected List<Match>						matches		= new ArrayList<Match>();
-	protected HashMap<Integer, List<PongHost>>	hosts		= new HashMap<Integer, List<PongHost>>();
-	protected List<Ticker>						tickers		= new ArrayList<Ticker>();
+	public static final int						DEFAULT_INTERVAL			= 10;
+	public static final int						DEFAULT_MAX_SCORE			= 10;
+	public static final double					DEFAULT_SLIDER_SIZE			= 0.1;
+	public static final double					DEFAULT_BALL_RELEASE_SPEED	= 0.005;
+
+	protected List<Match>						matches						= new ArrayList<Match>();
+	protected HashMap<Integer, List<PongHost>>	hosts						= new HashMap<Integer, List<PongHost>>();
+	protected List<Ticker>						tickers						= new ArrayList<Ticker>();
 
 	protected int								objectIdCounter;
 	protected int								matchIdCounter;
 	protected int								playerIdCounter;
-	protected Random							random		= new Random();
+	protected Random							random						= new Random();
 
-	protected int								interval	= 10;									// ms
-	protected int								maxScore	= 10;
-	protected double							sliderSize	= 0.1;
+	// configurable values
+	protected int								interval;
+	protected int								maxScore;
+	protected double							sliderSize;
+	protected double							ballReleaseSpeed;
+	
+	// calculated values
+	protected double							maxSliderPositionChange; 
+
+	public MatchManagerImpl()
+	{
+		setInterval(DEFAULT_INTERVAL);
+		setMaxScore(DEFAULT_MAX_SCORE);
+		setSliderSize(DEFAULT_SLIDER_SIZE);
+		setBallReleaseSpeed(DEFAULT_BALL_RELEASE_SPEED);
+	}
 
 	public int getInterval()
 	{
@@ -53,6 +71,38 @@ public class MatchManagerImpl implements MatchManager
 		if(interval <= 0)
 			throw new IllegalArgumentException("interval must be > 0");
 		this.interval = interval;
+		// minimum of 100ms for full range
+		this.maxSliderPositionChange = 1.0 / (100 / interval);
+	}
+
+	public int getMaxScore()
+	{
+		return maxScore;
+	}
+
+	public void setMaxScore(int maxScore)
+	{
+		this.maxScore = maxScore;
+	}
+
+	public double getSliderSize()
+	{
+		return sliderSize;
+	}
+
+	public void setSliderSize(double sliderSize)
+	{
+		this.sliderSize = sliderSize;
+	}
+
+	public double getBallReleaseSpeed()
+	{
+		return ballReleaseSpeed;
+	}
+
+	public void setBallReleaseSpeed(double ballReleaseSpeed)
+	{
+		this.ballReleaseSpeed = ballReleaseSpeed;
 	}
 
 	@Override
@@ -89,10 +139,10 @@ public class MatchManagerImpl implements MatchManager
 				break;
 
 			case running:
-				
+
 				// update tick
 				match.setTick(match.getTick() + 1);
-				
+
 				// store number of corners for convenience
 				int corners = match.getPlayers().size() * 2;
 
@@ -111,13 +161,13 @@ public class MatchManagerImpl implements MatchManager
 						p.setSliderSize(1.0);
 					}
 				}
-				
+
 				// check if there are at least 2 active players
 				if(connected < 2)
 				{
 					match.setState(EnumMatchState.finished);
 					break;
-				}				
+				}
 
 				// apply commands
 				Command c;
@@ -128,13 +178,21 @@ public class MatchManagerImpl implements MatchManager
 					c = getCommand(p, match.getTick());
 					if(c != null)
 					{
+						// get min/max valid position
+						double minValid = p.getSliderPosition() - maxSliderPositionChange;
+						double maxValid = p.getSliderPosition() + maxSliderPositionChange;
 						// move slider
 						p.setSliderPosition(c.getSliderPosition());
-						// TODO
-						
-						
+						// validate new position
+						if(p.getSliderPosition() < minValid)
+							p.setSliderPosition(minValid);
+						else if(p.getSliderPosition() > maxValid)
+							p.setSliderPosition(maxValid);
+
+						// recalculate slider
 						updateSlider(p, match.getPlayers().size(), i);
-						// release
+
+						// release ball
 						if(c.isRelease() && p.isBall())
 						{
 							Ball ball = new Ball();
@@ -145,13 +203,13 @@ public class MatchManagerImpl implements MatchManager
 							// orthogonal
 							Vector playerCenter = Geometry.getCenterPoint(corners, i * 2);
 							double angle = Geometry.angle(playerCenter);
-							ball.setDirection(Geometry.direction(angle + Math.PI).scale(0.005));
+							ball.setDirection(Geometry.direction(angle + Math.PI).scale(ballReleaseSpeed));
 							// last contact is releasing player (use player color)
 							ball.setLastContact(p);
 						}
 					}
 				}
-				
+
 				// handle map objects
 				List<MapObject> objects = match.getMap().getObjects();
 
@@ -160,18 +218,15 @@ public class MatchManagerImpl implements MatchManager
 				{
 					obj.getCollisions().clear();
 				}
-				
-				// TODO move ball
-				// TODO do not apply multiple collisions
-
-				// consider interaction between objects
-				Physics.interact(objects);
 
 				for(MapObject obj : objects)
 				{
 					if(obj instanceof Ball)
 					{
 						Ball ball = (Ball) obj;
+
+						// consider interaction between objects
+						Physics.interact(ball, objects);
 
 						// update color (use color of player with last contact)
 						ball.setColor(ball.getLastContact().getColor());
@@ -227,9 +282,9 @@ public class MatchManagerImpl implements MatchManager
 		match.getMap().setColor(Color.BLACK);
 
 		this.matches.add(match);
-		
+
 		this.hosts.put(match.getId(), new ArrayList<PongHost>());
-		
+
 		try
 		{
 			this.addHost(match, new PongSocketHost(this, match, port));
@@ -276,19 +331,19 @@ public class MatchManagerImpl implements MatchManager
 	public synchronized boolean start(Match match)
 	{
 		logger.debug("attempt to start match: '" + match.getName() + "'");
-		
+
 		if(!isReady(match))
 			return false;
 
 		logger.info("starting match: '" + match.getName() + "'");
-		
+
 		// stop accepting clients
 		List<PongHost> matchHosts = this.hosts.get(match.getId());
 		for(PongHost host : matchHosts)
 		{
 			host.stopAccepting();
 		}
-		
+
 		// set running
 		match.setState(EnumMatchState.running);
 
@@ -318,11 +373,11 @@ public class MatchManagerImpl implements MatchManager
 		player.setColor(randomColor());
 		player.setSliderPosition(0.5);
 		player.setSliderSize(sliderSize);
-		
+
 		match.getPlayers().add(player);
 
 		rebuild(match); // for new player count
-		
+
 		return player;
 	}
 
@@ -330,7 +385,7 @@ public class MatchManagerImpl implements MatchManager
 	public synchronized void command(Match match, Command command)
 	{
 		logger.debug("player command: " + command.getPlayer().getId() + " pos=" + command.getSliderPosition());
-		
+
 		int nextTick = match.getTick() + 1;
 		List<Command> playerCommands = command.getPlayer().getCommands();
 		Command next = getCommand(command.getPlayer(), nextTick);
@@ -340,7 +395,7 @@ public class MatchManagerImpl implements MatchManager
 		command.setTick(nextTick);
 		playerCommands.add(command);
 	}
-	
+
 	protected Command getCommand(Player player, int tick)
 	{
 		if(player.getCommands() == null)
@@ -391,21 +446,21 @@ public class MatchManagerImpl implements MatchManager
 	{
 		return new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
 	}
-	
+
 	protected void updateSlider(Player player, int playerCount, int playerIndex)
 	{
 		Slider slider = player.getSlider();
 		double position = player.getSliderPosition();
 		double size = player.getSliderSize();
-		
-		double startPos = position - size/2;
-		double endPos = position + size/2;
 
-		Vector startCorner = Geometry.getStartCornerPoint(playerCount * 2, playerIndex * 2 );
+		double startPos = position - size / 2;
+		double endPos = position + size / 2;
+
+		Vector startCorner = Geometry.getStartCornerPoint(playerCount * 2, playerIndex * 2);
 		Vector endCorner = Geometry.getEndCornerPoint(playerCount * 2, playerIndex * 2);
-		
+
 		Vector edge = new Vector(endCorner).sub(startCorner);
-		
+
 		Vector start = new Vector(startCorner).add(new Vector(edge).scale(startPos));
 		Vector end = new Vector(startCorner).add(new Vector(edge).scale(endPos));
 
@@ -432,7 +487,7 @@ public class MatchManagerImpl implements MatchManager
 				tick(match);
 				end = System.currentTimeMillis();
 
-				sleep = interval - (end-start);
+				sleep = interval - (end - start);
 				if(sleep > 0)
 				{
 					try

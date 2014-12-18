@@ -239,8 +239,9 @@ public class GeometryTest extends TestCase
 				Geometry.intersect(new Vector(-1.0, -1.0), new Vector(1.0, 1.0), new Vector(1.0, 0.0), new Vector(0.0, 1.0)));
 		assertEquals(new Vector(0.0, 0.0),
 				Geometry.intersect(new Vector(-1.0, -1.0), new Vector(1.0, 1.0), new Vector(-0.5, 1.0), new Vector(0.5, -1.0)));
-		
-		assertEquals(new Vector(0.1, 1.0), Geometry.intersect(new Vector(-1.0, 1.0), new Vector(1.0, 1.0), new Vector(0.1, 0.0), new Vector(0.1, 2.0)));
+
+		assertEquals(new Vector(0.1, 1.0),
+				Geometry.intersect(new Vector(-1.0, 1.0), new Vector(1.0, 1.0), new Vector(0.1, 0.0), new Vector(0.1, 2.0)));
 	}
 
 	public void testIntersect_Polygons() throws Exception
@@ -248,31 +249,41 @@ public class GeometryTest extends TestCase
 		Polygon p1, p2;
 		List<Vector> intersections;
 
+		// @formatter:off
 		/*
-		 * ooooooo
-		 * o o
+		 *   ooooooo
+		 *   o     o
 		 * ooxoooo o
-		 * o o o o
+		 * o o   o o
 		 * o o 0 o o
-		 * o o o o
+		 * o o   o o
 		 * o ooooxoo
-		 * o o
+		 * o     o
 		 * ooooooo
 		 */
+		// @formatter:on
 
-		p1 = new Polygon.Impl(Arrays.asList(new Vector(2.0, 2.0), new Vector(2.0, -1.0), new Vector(-1.0, -1.0), new Vector(-1.0, 2.0)));
-		p2 = new Polygon.Impl(Arrays.asList(new Vector(-2.0, -2.0), new Vector(-2.0, 1.0), new Vector(1.0, 1.0), new Vector(1.0, -2.0)));
+		p1 = new Polygon.Impl(Arrays.asList(new Vector(-1.0, 2.0), new Vector(2.0, 2.0), new Vector(2.0, -1.0), new Vector(-1.0, -1.0)));
+		p2 = new Polygon.Impl(Arrays.asList(new Vector(1.0, -2.0), new Vector(-2.0, -2.0), new Vector(-2.0, 1.0), new Vector(1.0, 1.0)));
 
 		intersections = Geometry.intersect(p1, p2);
 		assertEquals(2, intersections.size());
 		assertTrue(intersections.contains(new Vector(1.0, -1.0)));
 		assertTrue(intersections.contains(new Vector(-1.0, 1.0)));
+
+		// open (left edge missing)
+		
+		p1 = new Polygon.Impl(Arrays.asList(new Vector(-1.0, 2.0), new Vector(2.0, 2.0), new Vector(2.0, -1.0), new Vector(-1.0, -1.0)), true); 
+		
+		intersections = Geometry.intersect(p1, p2);
+		assertEquals(1, intersections.size());
+		assertTrue(intersections.contains(new Vector(1.0, -1.0)));
 	}
 
 	public void testMirror() throws Exception
 	{
 		Vector line;
-		
+
 		line = new Vector(1.0, 0.0); // 0°
 		assertEquals(new Vector(0.0, -1.0), Geometry.mirror(new Vector(0.0, 1.0), line));
 		assertEquals(new Vector(0.0, 1.0), Geometry.mirror(new Vector(0.0, -1.0), line));
