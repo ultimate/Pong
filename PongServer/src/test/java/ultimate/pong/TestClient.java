@@ -5,6 +5,9 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ultimate.pong.data.model.Command;
 import ultimate.pong.logic.PongHost;
 
@@ -13,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class TestClient
 {
+	protected static transient final Logger logger = LoggerFactory.getLogger(TestClient.class);
+	
 	public static void main(String[] args) throws Exception
 	{
 		final int port = 5555;
@@ -30,7 +35,7 @@ public class TestClient
 			for(int i = 0; i < players; i++)
 			{
 				sockets[i] = new Socket("localhost", port);
-				System.out.println(i + ": connected");
+				logger.info(i + ": connected");
 			}
 
 			Thread.sleep(1000);
@@ -45,7 +50,7 @@ public class TestClient
 				sockets[i].getOutputStream().write(PongHost.DELIM.getBytes());
 				sockets[i].getOutputStream().flush();
 
-				System.out.println(i + ": ready");
+				logger.info(i + ": ready");
 			}
 
 			double speed = 0.05;
@@ -67,7 +72,7 @@ public class TestClient
 					sockets[i].getOutputStream().flush();
 					messagesSent[i]++;
 					if(messagesSent[i] % 100 == 0)
-						System.out.println(i + ": " + messagesSent[i]);
+						logger.info(i + ": " + messagesSent[i]);
 
 					while(sockets[i].getInputStream().available() > 0)
 						sockets[i].getInputStream().read();

@@ -98,4 +98,11 @@ public class Wall extends MapObject implements Polygon
 	{
 		return Arrays.asList(new Vector[] {start, end});
 	}
+
+	@JsonIgnore
+	@Override
+	public boolean isOpen()
+	{
+		return true;
+	}
 }

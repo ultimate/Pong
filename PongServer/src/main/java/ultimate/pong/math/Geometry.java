@@ -6,8 +6,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class Geometry
 {
+	protected transient static final Logger logger = LoggerFactory.getLogger(Geometry.class);
+	
 	private Geometry()
 	{
 
@@ -106,13 +111,13 @@ public abstract class Geometry
 		double c2 = v21.y - v11.y;
 		double quotient = a1 * b2 - a2 * b1;
 
-		// System.out.println("a1=" + a1);
-		// System.out.println("a2=" + a2);
-		// System.out.println("b1=" + b1);
-		// System.out.println("b2=" + b2);
-		// System.out.println("c1=" + c1);
-		// System.out.println("c2=" + c2);
-		// System.out.println("quotient=" + quotient);
+		// logger.trace("a1=" + a1);
+		// logger.trace("a2=" + a2);
+		// logger.tracen("b1=" + b1);
+		// logger.trace("b2=" + b2);
+		// logger.tracen("c1=" + c1);
+		// logger.trace("c2=" + c2);
+		// logger.trace("quotient=" + quotient);
 
 		if(quotient == 0.0) // lines are parallel
 			return null; // no intersection
@@ -127,10 +132,10 @@ public abstract class Geometry
 
 		double xs1 = v11.x + p1 * (v12.x - v11.x);
 		double ys1 = v11.y + p1 * (v12.y - v11.y);
-		// System.out.println("intersection 1: " + xs1 + " , " + ys1);
+		// logger.trace("intersection 1: " + xs1 + " , " + ys1);
 		// double xs2 = v21.x + p2*(v22.x - v21.x);
 		// double ys2 = v21.y + p2*(v22.y - v21.y);
-		// System.out.println("intersection 2: " + xs2 + " , " + ys2);
+		// logger.trace("intersection 2: " + xs2 + " , " + ys2);
 
 		Intersection intersection = new Intersection();
 		intersection.segment1 = 0; // single line

@@ -26,11 +26,14 @@ public abstract class Physics
 
 	public static void interact(Ball ball, List<MapObject> objects)
 	{
+		if(ball.getPath().size() == 0)
+			ball.getPath().add(new Vector(ball.getPosition()));
 		ball.getPath().add(new Vector(ball.getPosition()).add(ball.getDirection())); // theoretic ball end
 		
 		List<Intersection> tmpIntersections;
 		Intersection intersection;
 		MapObject intersectingObject;
+		int cycle = 0;
 		
 		// process objects the following way:
 		// 1. get the nearest intersection
@@ -49,6 +52,8 @@ public abstract class Physics
 			Vector sectionEnd = ball.getPath().get(ball.getPath().size()-1);
 			Polygon section = new Polygon.Impl(Arrays.asList(new Vector[] {sectionStart, sectionEnd}), true);
 			
+			logger.debug("current section: " + sectionStart + " -> " + sectionEnd);
+			
 			for(MapObject other: objects)
 			{
 				if(other instanceof Polygon)
@@ -58,8 +63,25 @@ public abstract class Physics
 					for(Intersection i: tmpIntersections)
 					{
 						logger.debug("intersection found @ " + i.getPoint() + " (p=" + i.getPosition1() + ")");
-						if(intersection == null || (intersection != null && i.getPosition1() < intersection.getPosition1()))
+						
+						if(cycle > 0 && i.getPosition1() <= 0.0)
 						{
+							logger.debug("ignoring intersection");
+							// when handling the second or third or any later section
+							// there will always be an intersection at p=0
+							// ignore this
+							continue;
+						}
+						
+						if(intersection == null)
+						{
+							logger.debug("first intersection found");
+							intersection = i;
+							intersectingObject = other;
+						}
+						else if(intersection != null && i.getPosition1() < intersection.getPosition1())
+						{
+							logger.debug("ealier intersection found");
 							intersection = i;
 							intersectingObject = other;
 						}
@@ -150,6 +172,8 @@ public abstract class Physics
 				if(newDirection != null)
 					ball.setDirection(newDirection);
 			}			
+			
+			cycle++;
 		} while(intersectingObject != null);
 		
 		// update ball position to end of path

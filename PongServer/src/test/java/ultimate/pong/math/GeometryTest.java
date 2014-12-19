@@ -3,10 +3,15 @@ package ultimate.pong.math;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import junit.framework.TestCase;
 
 public class GeometryTest extends TestCase
 {
+	protected transient final Logger logger = LoggerFactory.getLogger(getClass());
+	
 	public static final double	TOLERANCE	= Vector.TOLERANCE;
 
 	public void testGetSectorSize() throws Exception
