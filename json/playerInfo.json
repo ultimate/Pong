@@ -1,0 +1,9 @@
+{  
+	"name":"player0",
+	"color":{  
+		"r":16,
+		"g":221,
+		"b":98
+	},
+	"ready":true
+}
