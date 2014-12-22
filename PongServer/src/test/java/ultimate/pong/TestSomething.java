@@ -2,6 +2,7 @@ package ultimate.pong;
 
 import java.io.IOException;
 
+import junit.framework.TestCase;
 import ultimate.pong.data.model.Color;
 import ultimate.pong.data.model.Command;
 import ultimate.pong.data.model.Map;
@@ -15,9 +16,9 @@ import ultimate.pong.data.model.objects.Wall;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-public class TestSomething
+public class TestSomething extends TestCase
 {
-	public static void main(String[] args) throws IOException
+	public void testJSON() throws IOException
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectWriter writer = mapper.writer();

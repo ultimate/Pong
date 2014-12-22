@@ -2,14 +2,11 @@ package ultimate.pong;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ultimate.pong.data.model.Command;
-import ultimate.pong.logic.PongHost;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -20,8 +17,8 @@ public class TestClient
 	
 	public static void main(String[] args) throws Exception
 	{
-		final int port = 5555;
-		int players = 2;
+		final int port = 55555;
+		int players = 3;
 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectWriter writer = mapper.writer();
@@ -39,21 +36,8 @@ public class TestClient
 			}
 
 			Thread.sleep(1000);
-
-			for(int i = 0; i < players; i++)
-			{
-				Map<String, Object> playerInfo = new HashMap<String, Object>();
-				playerInfo.put("name", "player" + i);
-				playerInfo.put("ready", true);
-
-				sockets[i].getOutputStream().write(writer.writeValueAsString(playerInfo).getBytes());
-				sockets[i].getOutputStream().write(PongHost.DELIM.getBytes());
-				sockets[i].getOutputStream().flush();
-
-				logger.info(i + ": ready");
-			}
-
-			double speed = 0.05;
+			
+			final double speed = 0.005;
 			double pos = 0.5;
 			double dir = speed;
 
@@ -64,11 +48,13 @@ public class TestClient
 					dir = -speed;
 				else if(pos <= 0.0)
 					dir = +speed;
-
+				
+//				logger.debug("pos=" + pos);
+				
 				for(int i = 0; i < players; i++)
 				{
-					sockets[i].getOutputStream().write(writer.writeValueAsString(new Command(null, pos, true)).getBytes());
-					sockets[i].getOutputStream().write(PongHost.DELIM.getBytes());
+					sockets[i].getOutputStream().write(writer.writeValueAsString(new Command(null, pos, true, true, "player" + i, null)).getBytes());
+					sockets[i].getOutputStream().write("\n\n".getBytes());
 					sockets[i].getOutputStream().flush();
 					messagesSent[i]++;
 					if(messagesSent[i] % 100 == 0)

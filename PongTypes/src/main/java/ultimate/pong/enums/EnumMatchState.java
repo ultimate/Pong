@@ -5,4 +5,5 @@ public enum EnumMatchState
 	waiting,
 	running,
 	finished,
+	deleted
 }

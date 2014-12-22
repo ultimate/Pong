@@ -18,6 +18,7 @@ public class Player
 	protected boolean		ready;
 	protected boolean		connected;
 	protected boolean		ball;
+	protected boolean		you;
 	// protected boolean last;
 	protected Slider		slider;
 	protected double		sliderSize;
@@ -115,6 +116,16 @@ public class Player
 	// {
 	// this.last = last;
 	// }
+
+	public boolean isYou()
+	{
+		return you;
+	}
+
+	public void setYou(boolean you)
+	{
+		this.you = you;
+	}
 
 	public Slider getSlider()
 	{

@@ -28,6 +28,7 @@ public class Ball extends MapObject
 	public Ball()
 	{
 		super(EnumObjectType.ball);
+		this.path = new LinkedList<Vector>();
 	}
 
 	public Ball(Vector position, Vector direction)
@@ -35,7 +36,6 @@ public class Ball extends MapObject
 		this();
 		this.position = position;
 		this.direction = direction;
-		this.path = new LinkedList<Vector>();
 	}
 
 	public Vector getPosition()

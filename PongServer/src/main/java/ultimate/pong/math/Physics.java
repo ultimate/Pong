@@ -64,7 +64,7 @@ public abstract class Physics
 					{
 						logger.debug("intersection found @ " + i.getPoint() + " (p=" + i.getPosition1() + ")");
 						
-						if(cycle > 0 && i.getPosition1() <= 0.0)
+						if(i.getPosition1() <= 0.0)
 						{
 							logger.debug("ignoring intersection");
 							// when handling the second or third or any later section

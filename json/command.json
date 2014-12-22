@@ -1,4 +1,7 @@
 {  
 	"sliderPosition": 0.3456333,
-	"release": false
+	"release": false,
+	"playerName": "player0",
+	"playerColor":{  "r":16, "g":221, "b":98 },
+	"playerReady":true
 }
