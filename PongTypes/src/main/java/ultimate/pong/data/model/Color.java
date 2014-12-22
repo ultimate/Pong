@@ -107,4 +107,9 @@ public class Color
 	{
 		return "Color [r=" + r + ", g=" + g + ", b=" + b + "]";
 	}
+	
+	public java.awt.Color toAWTColor()
+	{
+		return new java.awt.Color(r, g, b);
+	}
 }
