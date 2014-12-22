@@ -19,6 +19,7 @@
 	-->
     <modules>
         <module>PongTypes</module>
+        <module>PongClient</module>
         <module>PongServer</module>
     </modules>
 
