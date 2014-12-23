@@ -3,9 +3,14 @@ package ultimate.pong.data.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import ultimate.pong.data.model.objects.Ball;
+import ultimate.pong.data.model.objects.Slider;
+import ultimate.pong.data.model.objects.Wall;
 import ultimate.pong.enums.EnumObjectType;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MapObject
@@ -125,5 +130,20 @@ public class MapObject
 	{
 		return "MapObject [id=" + id + ", name=" + name + ", type=" + type + ", color=" + color + "]";
 	}
-
+	
+	@JsonCreator
+	public static MapObject fromType(@JsonProperty("type") EnumObjectType type)
+	{
+		switch(type)
+		{
+			case ball:
+				return new Ball();
+			case slider:
+				return new Slider();
+			case wall:
+				return new Wall();
+			default:
+				return new MapObject();
+		}
+	}
 }
