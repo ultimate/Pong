@@ -17,6 +17,7 @@ public class Ball extends MapObject
 	protected Vector		position;
 	protected Vector		direction;
 
+	@JsonIgnore
 	protected List<Vector>	path;
 	// @JsonIgnore
 	// protected Vector newPosition;

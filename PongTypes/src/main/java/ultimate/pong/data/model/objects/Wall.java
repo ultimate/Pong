@@ -12,10 +12,13 @@ import ultimate.pong.math.Polygon;
 import ultimate.pong.math.Vector;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Wall extends MapObject implements Polygon
+public class Wall extends MapObject implements Polygon, Damper
 {
 	protected Vector	start;
 	protected Vector	end;
+	
+	@JsonIgnore
+	protected double damping;
 
 	public Wall()
 	{
@@ -47,6 +50,16 @@ public class Wall extends MapObject implements Polygon
 	public void setEnd(Vector end)
 	{
 		this.end = end;
+	}
+
+	public double getDamping()
+	{
+		return damping;
+	}
+
+	public void setDamping(double damping)
+	{
+		this.damping = damping;
 	}
 
 	@Override

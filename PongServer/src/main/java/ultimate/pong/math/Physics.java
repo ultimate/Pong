@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import ultimate.pong.data.model.MapObject;
 import ultimate.pong.data.model.objects.Ball;
+import ultimate.pong.data.model.objects.Damper;
 import ultimate.pong.data.model.objects.Slider;
 import ultimate.pong.data.model.objects.Wall;
 import ultimate.pong.math.Geometry.Intersection;
@@ -28,42 +29,43 @@ public abstract class Physics
 	{
 		if(ball.getPath().size() == 0)
 			ball.getPath().add(new Vector(ball.getPosition()));
-		ball.getPath().add(new Vector(ball.getPosition()).add(ball.getDirection())); // theoretic ball end
-		
+		ball.getPath().add(new Vector(ball.getPosition()).add(ball.getDirection())); // theoretic
+																						// ball end
+
 		List<Intersection> tmpIntersections;
 		Intersection intersection;
 		MapObject intersectingObject;
 		int cycle = 0;
-		
+
 		// process objects the following way:
 		// 1. get the nearest intersection
 		// if(intersection)
-		//   2. handle
-		//	 3. go to 1
+		// 2. handle
+		// 3. go to 1
 		// else
-		// 	 end
+		// end
 		do
 		{
 			intersection = null;
 			intersectingObject = null;
-			
+
 			// consider last section of ball line, only
-			Vector sectionStart = ball.getPath().get(ball.getPath().size()-2);
-			Vector sectionEnd = ball.getPath().get(ball.getPath().size()-1);
-			Polygon section = new Polygon.Impl(Arrays.asList(new Vector[] {sectionStart, sectionEnd}), true);
-			
+			Vector sectionStart = ball.getPath().get(ball.getPath().size() - 2);
+			Vector sectionEnd = ball.getPath().get(ball.getPath().size() - 1);
+			Polygon section = new Polygon.Impl(Arrays.asList(new Vector[] { sectionStart, sectionEnd }), true);
+
 			logger.debug("current section: " + sectionStart + " -> " + sectionEnd);
-			
-			for(MapObject other: objects)
+
+			for(MapObject other : objects)
 			{
 				if(other instanceof Polygon)
 				{
 					tmpIntersections = Geometry.intersect2(section, (Polygon) other);
-					
-					for(Intersection i: tmpIntersections)
+
+					for(Intersection i : tmpIntersections)
 					{
 						logger.debug("intersection found @ " + i.getPoint() + " (p=" + i.getPosition1() + ")");
-						
+
 						if(i.getPosition1() <= 0.0)
 						{
 							logger.debug("ignoring intersection");
@@ -72,7 +74,7 @@ public abstract class Physics
 							// ignore this
 							continue;
 						}
-						
+
 						if(intersection == null)
 						{
 							logger.debug("first intersection found");
@@ -88,27 +90,30 @@ public abstract class Physics
 					}
 				}
 				// TODO other kind of objects (e.g. Ball)
-				
-			}			
-			
+
+			}
+
 			// handle intersection
 			if(intersectingObject != null)
 			{
 				Vector newPosition = null;
-				Vector newDirection = null;
-				
+				Vector newDirection = ball.getDirection();
+
 				if(intersectingObject instanceof Wall)
 				{
 					Wall wall = (Wall) intersectingObject;
 					Vector wallVector = new Vector(wall.getEnd()).sub(wall.getStart());
-	
+
 					// motion parts before and after collision
-					Vector part1 = new Vector(intersection.getPoint()).sub(sectionStart); // start -> intersection
-					Vector part2 = new Vector(sectionEnd).sub(intersection.getPoint()); // intersection -> end
-	
+					Vector part1 = new Vector(intersection.getPoint()).sub(sectionStart); // start
+																							// ->
+																							// intersection
+					Vector part2 = new Vector(sectionEnd).sub(intersection.getPoint()); // intersection
+																						// -> end
+
 					// new direction
 					newDirection = Geometry.mirror(ball.getDirection(), wallVector);
-	
+
 					// new position
 					Vector part2Mirrored = Geometry.mirror(part2, wallVector); // rebounce
 					newPosition = new Vector(sectionStart).add(part1).add(part2Mirrored);
@@ -122,8 +127,11 @@ public abstract class Physics
 					Vector sliderNormal = Geometry.normal(sliderVector);
 
 					// motion parts before and after collision
-					Vector part1 = new Vector(intersection.getPoint()).sub(sectionStart); // start -> intersection
-					Vector part2 = new Vector(sectionEnd).sub(intersection.getPoint()); // intersection -> end
+					Vector part1 = new Vector(intersection.getPoint()).sub(sectionStart); // start
+																							// ->
+																							// intersection
+					Vector part2 = new Vector(sectionEnd).sub(intersection.getPoint()); // intersection
+																						// -> end
 
 					// slider mimics behavior of an ellipsis with
 					// x = tangential direction (of slider)
@@ -151,7 +159,8 @@ public abstract class Physics
 					Vector normal = new Vector(b * x / a, a * y / b);
 					// get normal for real Normal
 					// realNormal = t_x * normed(sliderVector) + t_y * normed(sliderNormal)
-					Vector realNormal = new Vector(sliderVector).norm().scale(normal.getX()).add(new Vector(sliderNormal).norm().scale(normal.getY()));
+					Vector realNormal = new Vector(sliderVector).norm().scale(normal.getX())
+							.add(new Vector(sliderNormal).norm().scale(normal.getY()));
 
 					// new direction
 					newDirection = new Vector(realNormal).norm().scale(ball.getDirection().length());
@@ -161,22 +170,27 @@ public abstract class Physics
 					newPosition = new Vector(ball.getPosition()).add(part1).add(part2Normal);
 				}
 				// TODO other kind of objects (e.g. Ball)
-				
+
+				if(intersectingObject instanceof Damper)
+				{
+					double factor = 1.0 - ((Damper) intersectingObject).getDamping();
+					newDirection.scale(factor);
+				}
+
 				// update ball path
-				ball.getPath().remove(ball.getPath().size()-1); // remove last
+				ball.getPath().remove(ball.getPath().size() - 1); // remove last
 				ball.getPath().add(intersection.getPoint()); // add intersection point
 				if(newPosition != null)
 					ball.getPath().add(newPosition); // add new end of motion
-				
+
 				// update direction
-				if(newDirection != null)
-					ball.setDirection(newDirection);
-			}			
-			
+				ball.setDirection(newDirection);
+			}
+
 			cycle++;
 		} while(intersectingObject != null);
-		
+
 		// update ball position to end of path
-		ball.setPosition(ball.getPath().get(ball.getPath().size()-1));
+		ball.setPosition(ball.getPath().get(ball.getPath().size() - 1));
 	}
 }
