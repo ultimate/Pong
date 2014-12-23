@@ -1,9 +1,8 @@
 package ultimate.pong.logic;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -13,6 +12,8 @@ import ultimate.pong.data.model.Command;
 import ultimate.pong.data.model.Match;
 import ultimate.pong.data.model.Player;
 import ultimate.pong.enums.EnumMatchState;
+import ultimate.pong.net.Client;
+import ultimate.pong.net.Handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -28,7 +29,7 @@ public abstract class PongHost extends Thread
 
 	protected Match						match;
 
-	protected List<Client>				clients;
+	protected List<ClientAdapter>		clients;
 
 	protected boolean					running;
 
@@ -41,25 +42,64 @@ public abstract class PongHost extends Thread
 		super();
 		this.matchManager = matchManager;
 		this.match = match;
-		this.clients = new ArrayList<Client>();
+		this.clients = new ArrayList<ClientAdapter>();
 	}
 
-	public List<Client> getClients()
+	public List<ClientAdapter> getClients()
 	{
 		return clients;
 	}
-
-	public void broadcast(Match match)
+	
+	public void broadcast(final Match match, boolean waitForWriters)
 	{
-		for(Client c : this.getClients())
+		List<Thread> writers = new LinkedList<Thread>();
+		Thread writer;
+		synchronized(this.clients)
 		{
-			try
+			for(ClientAdapter cl : this.clients)
 			{
-				c.sendMatch(match);
+				if(cl.client.isConnected())
+				{
+					final ClientAdapter clFinal = cl;
+					writer = new Thread() {
+						public void run()
+						{
+							try
+							{
+								clFinal.sendMatch(match);
+							}
+							catch(IOException e)
+							{
+								logger.error("error sending match to client: " + clFinal.toString(), e);
+								try
+								{
+									clFinal.client.disconnect();
+								}
+								catch(IOException e1)
+								{
+									// ignore
+								}
+							}
+						}
+					};
+					writer.start();
+					writers.add(writer);
+				}
 			}
-			catch(IOException e)
+		}
+		
+		if(waitForWriters)
+		{
+			for(Thread w : writers)
 			{
-				logger.error("error sending match to client", e);
+				try
+				{
+					w.join();
+				}
+				catch(InterruptedException e)
+				{
+					logger.error("could not join writer", e);
+				}
 			}
 		}
 	}
@@ -69,7 +109,7 @@ public abstract class PongHost extends Thread
 		this.running = true;
 		super.start();
 	}
-	
+
 	public synchronized void stopAccepting()
 	{
 		this.running = false;
@@ -93,7 +133,7 @@ public abstract class PongHost extends Thread
 				try
 				{
 					client = accept();
-					client.listen();
+					client.listen(new ClientAdapter(client));
 				}
 				catch(IOException e)
 				{
@@ -122,24 +162,21 @@ public abstract class PongHost extends Thread
 
 	public abstract void close() throws IOException;
 
-	public abstract class Client
+	public class ClientAdapter implements Handler
 	{
 		protected Player	player;
 
+		protected Client	client;
+
 		protected int		messagesHandled	= 0;
 
-		public Client()
+		public ClientAdapter(Client client)
 		{
 			super();
+			this.client = client;
 		}
 
-		protected abstract void listen();
-
-		protected abstract boolean isConnected();
-
-		protected abstract String readNextMessage() throws IOException;
-
-		protected void handleMessage(String message) throws IOException
+		public void handleMessage(String message) throws IOException
 		{
 			logger.debug("match state: " + match.getState() + " -> incoming message:\n" + message);
 
@@ -167,10 +204,10 @@ public abstract class PongHost extends Thread
 			// logger.info(player.getId() + ": " + messagesHandled);
 		}
 
-		protected abstract void sendMessage(String message) throws IOException;
-
-		protected void sendMatch(Match match) throws IOException
+		public void sendMatch(Match match) throws IOException
 		{
+//			long start, end;
+//			start = System.currentTimeMillis();
 			for(Player p : match.getPlayers())
 			{
 				if(this.player == null)
@@ -178,97 +215,45 @@ public abstract class PongHost extends Thread
 				else
 					p.setYou(p.getId() == this.player.getId());
 			}
-		}
-	}
+//			end = System.currentTimeMillis();
+//			logger.info("" + (end-start));
+			
+//			start = System.currentTimeMillis();
+			String msg = writer.writeValueAsString(match);
+//			end = System.currentTimeMillis();
+//			logger.info("" + (end-start));
 
-	public abstract class ActiveClient extends Client implements Runnable
-	{
-		@Override
-		protected void listen()
-		{
-			new Thread(this).start();
-		}
-
-		@Override
-		public void run()
-		{
-			clients.add(this);
-
+//			System.out.println(msg);
+			
 			try
 			{
-				String message;
-				while(isConnected())
-				{
-					message = readNextMessage();
-					if(message != null)
-						handleMessage(message);
-					else
-						break; // cancel if message is null
-				}
+				this.client.sendMessage(msg);
 			}
-			catch(Exception e)
+			catch(IOException e)
 			{
-				logger.error("exception running client", e);
+				
 			}
+		}
 
+		@Override
+		public void setup() throws IOException
+		{
+			synchronized(PongHost.this.clients)
+			{
+				PongHost.this.clients.add(this);
+			}
+		}
+
+		@Override
+		public void teardown() throws IOException
+		{
 			if(this.player != null)
 				this.player.setConnected(false);
-
-			clients.remove(this);
-		}
-	}
-
-	public abstract class StreamClient extends ActiveClient
-	{
-		protected abstract InputStream getInputStream() throws IOException;
-
-		protected abstract OutputStream getOutputStream() throws IOException;
-
-		@Override
-		protected String readNextMessage() throws IOException
-		{
-			try
+			
+			synchronized(PongHost.this.clients)
 			{
-				StringBuffer sb = new StringBuffer();
-				int c;
-				while(true)
-				{
-					c = getInputStream().read();
-					if(c == -1)
-						break;
-
-					sb.append((char) c);
-
-					if(sb.length() > DELIM.length())
-					{
-						boolean delimFound = true;
-						for(int di = 0; di < DELIM.length(); di++)
-						{
-
-							if(sb.charAt(sb.length() - DELIM.length() + di) != DELIM.charAt(di))
-							{
-								delimFound = false;
-								break;
-							}
-						}
-						if(delimFound)
-							return sb.toString();
-					}
-				}
+				PongHost.this.clients.remove(this);
 			}
-			catch(Exception e)
-			{
-				logger.error("error reading message (connected? "+ isConnected() + ")", e);
-			}
-			return null;
-		}
-
-		@Override
-		protected void sendMessage(String message) throws IOException
-		{
-			this.getOutputStream().write(message.getBytes());
-			this.getOutputStream().write(DELIM.getBytes());
-			this.getOutputStream().flush();
 		}
 	}
 }
