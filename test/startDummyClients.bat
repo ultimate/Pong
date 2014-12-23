@@ -1,0 +1,1 @@
+java -cp PongClient-1.0.0-full.jar ultimate.pong.TestClient
