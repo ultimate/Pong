@@ -18,12 +18,12 @@ public class TestClient
 	public static void main(String[] args) throws Exception
 	{
 		final int port = 55555;
-		int players = 3;
+		int players = 5;
 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectWriter writer = mapper.writer();
 
-		Socket[] sockets = new Socket[players];
+		final Socket[] sockets = new Socket[players];
 		int[] messagesSent = new int[players];
 
 		try
@@ -33,16 +33,35 @@ public class TestClient
 			{
 				sockets[i] = new Socket("localhost", port);
 				logger.info(i + ": connected");
+				
+				final int j = i;
+				new Thread() {
+					public void run() {
+						try
+						{
+							while(sockets[j].getInputStream().read() != -1);
+						}
+						catch(IOException e)
+						{
+							e.printStackTrace();
+						}
+					}
+				}.start();
+				
+				Thread.sleep(100);
 			}
 
 			Thread.sleep(1000);
 			
-			final double speed = 0.005;
+			final double speed = 0.05;
 			double pos = 0.5;
 			double dir = speed;
-
+			
+			int cycle = 0;
+			
 			while(true)
 			{
+				cycle++;
 				pos += dir;
 				if(pos >= 1.0)
 					dir = -speed;
@@ -53,18 +72,15 @@ public class TestClient
 				
 				for(int i = 0; i < players; i++)
 				{
-					sockets[i].getOutputStream().write(writer.writeValueAsString(new Command(null, pos, true, true, "player" + i, null)).getBytes());
+					sockets[i].getOutputStream().write(writer.writeValueAsString(new Command(null, pos, true, cycle > 10, "player" + i, null)).getBytes());
 					sockets[i].getOutputStream().write("\n\n".getBytes());
 					sockets[i].getOutputStream().flush();
 					messagesSent[i]++;
 					if(messagesSent[i] % 100 == 0)
 						logger.info(i + ": " + messagesSent[i]);
-
-					while(sockets[i].getInputStream().available() > 0)
-						sockets[i].getInputStream().read();
 				}
 
-				Thread.sleep(10);
+				Thread.sleep(20);
 			}
 		}
 		catch(Exception e)

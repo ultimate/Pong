@@ -31,10 +31,13 @@ public class MatchManagerImpl implements MatchManager
 {
 	protected transient final Logger			logger						= LoggerFactory.getLogger(getClass());
 
-	public static final int						DEFAULT_INTERVAL			= 10;
+	public static final double					DEFAULT_FPS					= 50;
 	public static final int						DEFAULT_MAX_SCORE			= 10;
 	public static final double					DEFAULT_SLIDER_SIZE			= 0.1;
-	public static final double					DEFAULT_BALL_RELEASE_SPEED	= 0.002;
+	public static final double					DEFAULT_BALL_RELEASE_SPEED	= 0.005;
+	public static final double					DEFAULT_BALL_SLIDER_DAMPING	= -0.05;
+	public static final double					DEFAULT_BALL_WALL_DAMPING	= 0.002;
+	public static final boolean					JOIN_WRITERS				= false;
 
 	protected List<Match>						matches						= new ArrayList<Match>();
 	protected HashMap<Integer, List<PongHost>>	hosts						= new HashMap<Integer, List<PongHost>>();
@@ -46,34 +49,40 @@ public class MatchManagerImpl implements MatchManager
 	protected Random							random						= new Random();
 
 	// configurable values
+	protected double							fps;
 	protected int								interval;
 	protected int								maxScore;
 	protected double							sliderSize;
 	protected double							ballReleaseSpeed;
-	
+	protected double							ballSliderDamping;
+	protected double							ballWallDamping;
+
 	// calculated values
-	protected double							maxSliderPositionChange; 
+	protected double							maxSliderPositionChange;
 
 	public MatchManagerImpl()
 	{
-		setInterval(DEFAULT_INTERVAL);
+		setFps(DEFAULT_FPS);
 		setMaxScore(DEFAULT_MAX_SCORE);
 		setSliderSize(DEFAULT_SLIDER_SIZE);
 		setBallReleaseSpeed(DEFAULT_BALL_RELEASE_SPEED);
+		setBallSliderDamping(DEFAULT_BALL_SLIDER_DAMPING);
+		setBallWallDamping(DEFAULT_BALL_WALL_DAMPING);
 	}
 
-	public int getInterval()
+	public double getFps()
 	{
-		return interval;
+		return fps;
 	}
 
-	public void setInterval(int interval)
+	public void setFps(double fps)
 	{
-		if(interval <= 0)
-			throw new IllegalArgumentException("interval must be > 0");
-		this.interval = interval;
-		// minimum of 100ms for full range
-		this.maxSliderPositionChange = 1.0 / (100.0 / interval);
+		if(fps <= 0 || fps > 100)
+			throw new IllegalArgumentException("fps must be within ]0;100]");
+		this.fps = fps;
+		this.interval = (int) Math.round(1000 / fps);
+		// minimum of max 10 slider width per second
+		this.maxSliderPositionChange = 10.0 / fps;
 	}
 
 	public int getMaxScore()
@@ -106,6 +115,26 @@ public class MatchManagerImpl implements MatchManager
 		this.ballReleaseSpeed = ballReleaseSpeed;
 	}
 
+	public double getBallSliderDamping()
+	{
+		return ballSliderDamping;
+	}
+
+	public void setBallSliderDamping(double ballSliderDamping)
+	{
+		this.ballSliderDamping = ballSliderDamping;
+	}
+
+	public double getBallWallDamping()
+	{
+		return ballWallDamping;
+	}
+
+	public void setBallWallDamping(double ballWallDamping)
+	{
+		this.ballWallDamping = ballWallDamping;
+	}
+
 	@Override
 	public List<Match> getMatches()
 	{
@@ -113,31 +142,30 @@ public class MatchManagerImpl implements MatchManager
 	}
 
 	@Override
-	public synchronized void tick(Match match)
+	public synchronized void tick(final Match match)
 	{
-		logger.debug("match tick #" + match.getTick());
+		// logger.debug("match tick #" + match.getTick());
 
 		// update tick
 		match.setTick(match.getTick() + 1);
-		
+
 		Command c;
 		Player p;
 
 		// check the number of connected players
 		int connected = checkPlayer(match);
-		
 
 		switch(match.getState())
 		{
 			case waiting:
-				
+
 				// check if match is ready and start it
 				if(isReady(match))
 					start(match);
-				
+
 			case finished:
 			case deleted:
-				
+
 				// moving slider is always possible
 				for(int i = 0; i < match.getPlayers().size(); i++)
 				{
@@ -145,11 +173,11 @@ public class MatchManagerImpl implements MatchManager
 					c = getCommand(p, match.getTick());
 					applySliderCommand(match, c, i);
 				}
-				
+
 				break;
-				
+
 			case running:
-				
+
 				// move slider and release ball
 				for(int i = 0; i < match.getPlayers().size(); i++)
 				{
@@ -167,7 +195,7 @@ public class MatchManagerImpl implements MatchManager
 				{
 					obj.getCollisions().clear();
 				}
-				
+
 				List<MapObject> objectsToRemove = new LinkedList<MapObject>();
 
 				for(MapObject obj : objects)
@@ -187,13 +215,13 @@ public class MatchManagerImpl implements MatchManager
 						{
 							objectsToRemove.add(ball);
 						}
-						
+
 						logger.debug("ball @ " + ball.getPosition());
 					}
 				}
-				
+
 				objects.removeAll(objectsToRemove);
-				
+
 				// check if there are at least 2 active players
 				if(match.getState() == EnumMatchState.running && connected < 2)
 					match.setState(EnumMatchState.finished);
@@ -202,10 +230,10 @@ public class MatchManagerImpl implements MatchManager
 		List<PongHost> matchHosts = this.hosts.get(match.getId());
 		for(PongHost host : matchHosts)
 		{
-			host.broadcast(match);
+			host.broadcast(match, JOIN_WRITERS);
 		}
 	}
-	
+
 	protected int checkPlayer(Match match)
 	{
 		int connected = 0;
@@ -232,20 +260,24 @@ public class MatchManagerImpl implements MatchManager
 		}
 		return connected;
 	}
-	
+
 	protected void applySliderCommand(Match match, Command command, int index)
 	{
 		if(command == null)
 			return;
-		
 
 		Player p = command.getPlayer();
 		// get min/max valid position
 		double minValid = p.getSliderPosition() - maxSliderPositionChange;
 		double maxValid = p.getSliderPosition() + maxSliderPositionChange;
 
+		if(minValid < p.getSliderSize() / 2)
+			minValid = p.getSliderSize() / 2;
+		if(maxValid > 1 - p.getSliderSize() / 2)
+			maxValid = 1 - p.getSliderSize() / 2;
+
 		double old = p.getSliderPosition();
-		
+
 		// move slider
 		p.setSliderPosition(command.getSliderPosition());
 		// validate new position
@@ -253,18 +285,18 @@ public class MatchManagerImpl implements MatchManager
 			p.setSliderPosition(minValid);
 		else if(p.getSliderPosition() > maxValid)
 			p.setSliderPosition(maxValid);
-		
+
 		logger.debug(index + " @ " + old + " -> " + p.getSliderPosition());
 
 		// recalculate slider
 		updateSlider(p, match.getPlayers().size(), index);
 	}
-	
+
 	protected void applyReleaseCommand(Match match, Command command, int index)
 	{
 		if(command == null)
 			return;
-		
+
 		int corners = match.getPlayers().size() * 2;
 		Player p = command.getPlayer();
 		// release ball
@@ -278,7 +310,7 @@ public class MatchManagerImpl implements MatchManager
 			// get direction from players slider range center in order to start
 			// orthogonal
 			Vector playerCenter = Geometry.getCenterPoint(corners, index * 2);
-			Vector direction = new Vector(playerCenter).scale(- ballReleaseSpeed);
+			Vector direction = new Vector(playerCenter).scale(-ballReleaseSpeed);
 			logger.debug("center=" + playerCenter);
 			logger.debug("dir=" + direction);
 			ball.setDirection(direction);
@@ -286,11 +318,11 @@ public class MatchManagerImpl implements MatchManager
 			ball.setLastContact(p);
 			// reset ball state for player
 			p.setBall(false);
-			
+
 			match.getMap().getObjects().add(ball);
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param match
@@ -300,7 +332,7 @@ public class MatchManagerImpl implements MatchManager
 	protected boolean checkBall(Match match, Ball ball)
 	{
 		int corners = match.getPlayers().size() * 2;
-		
+
 		// check if ball is out of the arena (R > 1)
 		double ballRadius = Geometry.distanceFromCenter(ball.getPosition());
 		if(ballRadius > 1.1)
@@ -314,13 +346,12 @@ public class MatchManagerImpl implements MatchManager
 				ball.getLastContact().decreaseScore(1);
 			// assign ball
 			targetPlayer.setBall(true);
-			
+
 			return false;
 		}
-		
+
 		return true;
 	}
-	
 
 	@Override
 	public synchronized Match createMatch(String name, int port)
@@ -362,7 +393,7 @@ public class MatchManagerImpl implements MatchManager
 	{
 		// set deleted
 		match.setState(EnumMatchState.running);
-		
+
 		// stop accepting clients
 		List<PongHost> matchHosts = this.hosts.get(match.getId());
 		for(PongHost host : matchHosts)
@@ -370,9 +401,9 @@ public class MatchManagerImpl implements MatchManager
 			host.stopAccepting();
 		}
 		this.hosts.remove(match.getId());
-		
+
 		this.matches.remove(match);
-		
+
 		// ticker will stop automatically
 	}
 
@@ -496,6 +527,7 @@ public class MatchManagerImpl implements MatchManager
 			w.setColor(Color.WHITE);
 			w.setStart(Geometry.getStartCornerPoint(playerCount * 2, i * 2 + 1));
 			w.setEnd(Geometry.getEndCornerPoint(playerCount * 2, i * 2 + 1));
+			w.setDamping(ballWallDamping);
 			match.getMap().getObjects().add(w);
 		}
 		// add sliders as Map Object
@@ -532,6 +564,7 @@ public class MatchManagerImpl implements MatchManager
 
 		slider.setStart(start);
 		slider.setEnd(end);
+		slider.setDamping(ballSliderDamping);
 	}
 
 	protected class Ticker extends Thread
@@ -565,8 +598,12 @@ public class MatchManagerImpl implements MatchManager
 						logger.error("could not sleep", e);
 					}
 				}
+				else
+				{
+					logger.warn("tick #" + match.getTick() + " - can't keep up interval of " + interval + " ms: tick length " + (end - start) + "ms");
+				}
 			}
-			
+
 			tickers.remove(this);
 		}
 	}

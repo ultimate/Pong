@@ -8,7 +8,7 @@
 
 	<bean id="matchManager" class="ultimate.pong.logic.impl.MatchManagerImpl">
 		<!--
-		<property name="interval" value="10">
+		<property name="fps" value="50">
 		<property name="maxScore" value="10">
 		<property name="sliderSize" value="0.1">
 		<property name="ballReleaseSpeed" value="0.005">
