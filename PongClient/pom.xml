@@ -22,7 +22,24 @@
     </parent>
 
     <build>
-        <defaultGoal>install</defaultGoal>
+        <defaultGoal>install</defaultGoal>		
+		<plugins>
+			<plugin>			    
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-shade-plugin</artifactId>
+	            <executions>
+	                <execution>
+	                    <phase>install</phase>
+	                    <goals>
+	                        <goal>shade</goal>
+	                    </goals>
+	                    <configuration>
+	                        <finalName>${artifactId}-${version}-full</finalName>
+	                    </configuration>
+	                </execution>
+	            </executions>
+			</plugin>
+		</plugins>
     </build>
 
 	<!--

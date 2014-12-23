@@ -51,7 +51,7 @@ public class TestClient
 				Thread.sleep(100);
 			}
 
-			Thread.sleep(1000);
+			Thread.sleep(10000);
 			
 			final double speed = 0.05;
 			double pos = 0.5;
